@@ -246,7 +246,38 @@ function PredicateSection({ width }: { width: number }) {
   );
 }
 
-function FunctionSection() {
+function FunctionSection({ width }: { width: number }) {
+  const [predicates, setPredicates] = useState<string[]>([
+    "Function 1",
+    "Function 2",
+    "Function 3",
+    "Function 4",
+    "Function 5",
+  ]);
+  const [isAdding, setIsAdding] = useState(false);
+  const [newPredicate, setNewPredicate] = useState("");
+
+  const handleDelete = (index: number) => {
+    setPredicates(predicates.filter((_, i) => i !== index));
+  };
+
+  const handleAddClick = () => {
+    setIsAdding(true);
+  };
+
+  const handleAddConfirm = () => {
+    if (newPredicate.trim() !== "") {
+      setPredicates([...predicates, newPredicate.trim()]);
+      setNewPredicate("");
+      setIsAdding(false);
+    }
+  };
+
+  const handleAddCancel = () => {
+    setNewPredicate("");
+    setIsAdding(false);
+  };
+
   return (
     <>
       <Box
@@ -258,8 +289,63 @@ function FunctionSection() {
       >
         Functions
       </Box>
-      <Box flex={1} overflow="auto" padding="8px">
-        ass
+      <Box
+        maxWidth={width}
+        height="40px" // Set a constant height for the box with chips
+        overflow="auto"
+        padding="8px"
+        display="flex"
+        gap="8px"
+        alignContent="flex-start"
+      >
+        {predicates.map((predicate, index) => (
+          <Chip
+            key={index}
+            label={predicate}
+            onDelete={() => handleDelete(index)}
+          />
+        ))}
+        {isAdding ? (
+          <Box display="flex" alignItems="center" gap="8px">
+            <input
+              type="text"
+              value={newPredicate}
+              onChange={(e) => setNewPredicate(e.target.value)}
+              placeholder="Enter predicate"
+              style={{
+                padding: "4px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+              }}
+            />
+            <Button variant="contained" size="small" onClick={handleAddConfirm}>
+              Add
+            </Button>
+            <Button variant="outlined" size="small" onClick={handleAddCancel}>
+              Cancel
+            </Button>
+          </Box>
+        ) : (
+          <Chip label="+" onClick={handleAddClick} />
+        )}
+      </Box>
+      <Box
+        maxWidth={width}
+        flex={1}
+        overflow="auto"
+        padding="8px"
+        borderTop="1px solid #ccc"
+      >
+        <MonacoEditor
+          height="500px"
+          defaultLanguage="javascript"
+          defaultValue={`// Add your code here`}
+          options={{
+            minimap: { enabled: false },
+            scrollBeyondLastLine: false,
+          }}
+          theme="vs-dark"
+        />
       </Box>
     </>
   );
@@ -292,7 +378,7 @@ function Section({ idx, width }: { idx: number; width: number }) {
   } else if (idx === 1) {
     Ret = <PredicateSection width={width} />;
   } else if (idx === 2) {
-    Ret = <FunctionSection />;
+    Ret = <FunctionSection width={width} />;
   }
 
   return <Box borderTop="2px solid #888">{Ret}</Box>;
