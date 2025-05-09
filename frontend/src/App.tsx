@@ -6,9 +6,48 @@ import { useState } from "react";
 import { Box, Card, CardContent } from "@mui/material";
 import { NumberSize, Resizable } from "re-resizable";
 
+function LeftPane() {
+  return (
+    <Box overflow="auto" height="100%">
+      {[...Array(10)].map((_, index) => (
+        <Card key={index} style={{ margin: "8px" }}>
+          <CardContent>Card {index + 1}</CardContent>
+        </Card>
+      ))}
+    </Box>
+  );
+}
+
+function Section() {
+  return (
+    <>
+      <Box
+        height="40px"
+        bgcolor="#f5f5f5"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        borderBottom="1px solid #ccc"
+      >
+        Section Bar
+      </Box>
+      <Box flex={1} overflow="auto" padding="8px">
+        <p>
+          This is the content box. You can add any text, components, or other
+          elements here to display in this section.
+        </p>
+      </Box>
+    </>
+  );
+}
+
 function AppContent() {
-  const [leftWidth, setLeftWidth] = useState(300); // Initial width of the left pane
-  const [sectionHeights, setSectionHeights] = useState([100, 100, 100]); // Initial heights of the right sections
+  const [leftWidth, setLeftWidth] = useState(window.innerWidth / 2); // Initialize to half the width of the page
+  const [sectionHeights, setSectionHeights] = useState([
+    window.innerHeight / 3,
+    window.innerHeight / 3,
+    window.innerHeight / 3,
+  ]);
 
   const handleResizeLeft = (
     e: any,
@@ -28,7 +67,6 @@ function AppContent() {
   ) => {
     const newHeights = [...sectionHeights];
     newHeights[index] += d.height;
-    newHeights[index + 1] -= d.height;
     setSectionHeights(newHeights);
   };
 
@@ -41,13 +79,7 @@ function AppContent() {
         enable={{ right: true }}
         style={{ borderRight: "1px solid #ccc" }}
       >
-        <Box overflow="auto" height="100%">
-          {[...Array(10)].map((_, index) => (
-            <Card key={index} style={{ margin: "8px" }}>
-              <CardContent>Card {index + 1}</CardContent>
-            </Card>
-          ))}
-        </Box>
+        <LeftPane />
       </Resizable>
 
       {/* Right Pane */}
@@ -71,17 +103,7 @@ function AppContent() {
               height="100%"
               overflow="hidden"
             >
-              <Box
-                height="40px"
-                bgcolor="#f5f5f5"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                borderBottom="1px solid #ccc"
-              >
-                Section {index + 1} Bar
-              </Box>
-              <Box flex={1} />
+              <Section />
             </Box>
           </Resizable>
         ))}
@@ -102,6 +124,7 @@ function App() {
           marginTop: "64px", // Adjust for AppBar
           maxWidth: "100%",
           height: "calc(100vh - 64px)", // Adjust for AppBar
+          overflow: "hidden",
         }}
       >
         <AppContent />
