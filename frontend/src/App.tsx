@@ -1,19 +1,55 @@
-import React from "react";
-import { AppBar, Container } from "@mui/material";
+import { AppBar, Button, Container } from "@mui/material";
 import MonacoEditor from "@monaco-editor/react";
 import AppToolbar from "./components/toolbar";
 import { useState } from "react";
 import { Box, Card, CardContent } from "@mui/material";
 import { NumberSize, Resizable } from "re-resizable";
+import AddIcon from "@mui/icons-material/Add";
+
+function ConstraintCardContent({ num }: { num: number }) {
+  return (
+    <CardContent style={{ padding: "0" }}>
+      {/* Title Bar */}
+      <Box
+        bgcolor="#d4d4d4"
+        padding="8px"
+        borderBottom="1px solid #ccc"
+        display="flex"
+        alignItems="center"
+        justifyContent="space-between"
+      >
+        <span>Constraint {num + 1}</span>
+      </Box>
+      {/* Monaco Editor */}
+      <Box height="200px" overflow="hidden">
+        <MonacoEditor
+          height="100%"
+          defaultLanguage="javascript"
+          defaultValue={`// Code for Card ${num + 1}`}
+          options={{
+            minimap: { enabled: false },
+            scrollBeyondLastLine: false,
+          }}
+          theme="vs-dark"
+        />
+      </Box>
+    </CardContent>
+  );
+}
 
 function LeftPane() {
   return (
     <Box overflow="auto" height="100%">
-      {[...Array(10)].map((_, index) => (
-        <Card key={index} style={{ margin: "8px" }}>
-          <CardContent>Card {index + 1}</CardContent>
+      {[...Array(2)].map((_, index) => (
+        <Card key={index} style={{ width: "96%", marginBottom: "16px" }}>
+          <ConstraintCardContent num={index} />
         </Card>
       ))}
+      <Card style={{ width: "96%" }}>
+        <Button fullWidth variant="contained">
+          Add Constraint <AddIcon />
+        </Button>
+      </Card>
     </Box>
   );
 }
@@ -23,11 +59,10 @@ function Section() {
     <>
       <Box
         height="40px"
-        bgcolor="#f5f5f5"
+        bgcolor="#d4d4d4"
         display="flex"
         alignItems="center"
         justifyContent="center"
-        borderBottom="1px solid #ccc"
       >
         Section Bar
       </Box>
@@ -125,6 +160,7 @@ function App() {
           maxWidth: "100%",
           height: "calc(100vh - 64px)", // Adjust for AppBar
           overflow: "hidden",
+          paddingTop: "16px",
         }}
       >
         <AppContent />
