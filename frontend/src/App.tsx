@@ -1,12 +1,48 @@
-import { AppBar, Button, Container, Chip } from "@mui/material";
+import {
+  AppBar,
+  Button,
+  Container,
+  Chip,
+  Switch,
+  FormControlLabel,
+  FormGroup,
+} from "@mui/material";
 import MonacoEditor from "@monaco-editor/react";
 import AppToolbar from "./components/toolbar";
 import { useState } from "react";
 import { Box, Card, CardContent } from "@mui/material";
 import { NumberSize, Resizable } from "re-resizable";
 import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { useRef } from "react";
 
-function ConstraintCardContent({ num }: { num: number }) {
+function ConstraintCardContent({
+  num,
+  deleteCard,
+}: {
+  num: number;
+  deleteCard: (arg0: number) => void;
+}) {
+  const editorRef = useRef<any>(null);
+  const [enabled, setEnabled] = useState(true);
+
+  const handleSwitch = () => {
+    setEnabled(!enabled);
+  };
+
+  // Called when the editor is mounted
+  const handleEditorDidMount = (editor: any) => {
+    editorRef.current = editor;
+  };
+
+  // Example: function to get the value
+  const getEditorValue = () => {
+    if (editorRef.current) {
+      return editorRef.current.getValue();
+    }
+    return "";
+  };
+
   return (
     <CardContent style={{ padding: "0" }}>
       {/* Title Bar */}
@@ -19,6 +55,25 @@ function ConstraintCardContent({ num }: { num: number }) {
         justifyContent="space-between"
       >
         <span>Constraint {num + 1}</span>
+        <Box display="flex" gap="8px">
+          <Button
+            onClick={handleSwitch}
+            variant={enabled ? "outlined" : "contained"}
+            color={enabled ? "error" : "primary"}
+          >
+            {enabled ? "Disable" : "Enable"}
+          </Button>
+          <Button
+            size="small"
+            variant="outlined"
+            color="error"
+            onClick={() => {
+              deleteCard(num);
+            }}
+          >
+            <DeleteIcon />
+          </Button>
+        </Box>
       </Box>
       {/* Monaco Editor */}
       <Box height="200px" overflow="hidden">
@@ -31,6 +86,7 @@ function ConstraintCardContent({ num }: { num: number }) {
             scrollBeyondLastLine: false,
           }}
           theme="vs-dark"
+          onMount={handleEditorDidMount}
         />
       </Box>
     </CardContent>
@@ -38,18 +94,30 @@ function ConstraintCardContent({ num }: { num: number }) {
 }
 
 function LeftPane() {
+  const [constraints, setConstraints] = useState<string[]>(["Constraint 1"]);
+  const handleAdd = (newConstraint: string) => {
+    setConstraints([...constraints, newConstraint]);
+  };
+  const handleDelete = (index: number) => {
+    setConstraints(constraints.filter((_, i) => i !== index));
+  };
+
   return (
     <Box overflow="auto" height="100%">
-      {[...Array(2)].map((_, index) => (
+      {constraints.map((_, index) => (
         <Card
           key={index}
           style={{ width: "100%%", marginBottom: "16px", marginRight: "24px" }}
         >
-          <ConstraintCardContent num={index} />
+          <ConstraintCardContent num={index} deleteCard={handleDelete} />
         </Card>
       ))}
       <Card style={{ width: "96%" }}>
-        <Button fullWidth variant="contained">
+        <Button
+          fullWidth
+          variant="contained"
+          onClick={() => handleAdd(`Constraint ${constraints.length + 1}`)}
+        >
           Add Constraint <AddIcon />
         </Button>
       </Card>
