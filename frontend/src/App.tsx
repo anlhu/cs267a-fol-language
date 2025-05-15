@@ -1,20 +1,122 @@
-import {
-  AppBar,
-  Button,
-  Container,
-  Chip,
-  Switch,
-  FormControlLabel,
-  FormGroup,
-} from "@mui/material";
+import { AppBar, Button, Container, Chip } from "@mui/material";
 import MonacoEditor from "@monaco-editor/react";
-import AppToolbar from "./components/toolbar";
-import { useState } from "react";
+import { useState, useRef, createContext, useContext } from "react";
 import { Box, Card, CardContent } from "@mui/material";
 import { NumberSize, Resizable } from "re-resizable";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { useRef } from "react";
+import { Toolbar } from "@mui/material";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import React from "react";
+
+// --- Contexts and hooks (unchanged) ---
+
+type Constraint = {
+  code: string;
+  enabled: boolean;
+};
+type ConstraintsContextType = {
+  constraints: Constraint[];
+  setConstraints: React.Dispatch<React.SetStateAction<Constraint[]>>;
+};
+type ConstantsContextType = {
+  constants: string[];
+  setConstants: React.Dispatch<React.SetStateAction<string[]>>;
+};
+type PredicatesContextType = {
+  predicates: string[];
+  setPredicates: React.Dispatch<React.SetStateAction<string[]>>;
+};
+type FunctionsContextType = {
+  functions: string[];
+  setFunctions: React.Dispatch<React.SetStateAction<string[]>>;
+};
+
+const ConstraintsContext = createContext<ConstraintsContextType | undefined>(
+  undefined
+);
+const ConstantsContext = createContext<ConstantsContextType | undefined>(
+  undefined
+);
+const PredicatesContext = createContext<PredicatesContextType | undefined>(
+  undefined
+);
+const FunctionsContext = createContext<FunctionsContextType | undefined>(
+  undefined
+);
+
+export const useConstraints = () => {
+  const ctx = useContext(ConstraintsContext);
+  if (!ctx)
+    throw new Error("useConstraints must be used within ConstraintsProvider");
+  return ctx;
+};
+export const useConstants = () => {
+  const ctx = useContext(ConstantsContext);
+  if (!ctx)
+    throw new Error("useConstants must be used within ConstantsProvider");
+  return ctx;
+};
+export const usePredicates = () => {
+  const ctx = useContext(PredicatesContext);
+  if (!ctx)
+    throw new Error("usePredicates must be used within PredicatesProvider");
+  return ctx;
+};
+export const useFunctions = () => {
+  const ctx = useContext(FunctionsContext);
+  if (!ctx)
+    throw new Error("useFunctions must be used within FunctionsProvider");
+  return ctx;
+};
+
+function AppProviders({ children }: { children: React.ReactNode }) {
+  const [constraints, setConstraints] = React.useState<Constraint[]>([
+    { code: "// Code for Card 1", enabled: true },
+  ]);
+  const [constants, setConstants] = React.useState<string[]>([
+    "Constant 1",
+    "Constant 2",
+  ]);
+  const [predicates, setPredicates] = React.useState<string[]>([
+    "Predicate 1",
+    "Predicate 2",
+    "Predicate 3",
+    "Predicate 4",
+    "Predicate 5",
+  ]);
+  const [functions, setFunctions] = React.useState<string[]>([
+    "Function 1",
+    "Function 2",
+    "Function 3",
+    "Function 4",
+    "Function 5",
+  ]);
+
+  return (
+    <ConstraintsContext.Provider value={{ constraints, setConstraints }}>
+      <ConstantsContext.Provider value={{ constants, setConstants }}>
+        <PredicatesContext.Provider value={{ predicates, setPredicates }}>
+          <FunctionsContext.Provider value={{ functions, setFunctions }}>
+            {children}
+          </FunctionsContext.Provider>
+        </PredicatesContext.Provider>
+      </ConstantsContext.Provider>
+    </ConstraintsContext.Provider>
+  );
+}
+
+// --- Components using context state ---
+
+function AppToolbar() {
+  return (
+    <Toolbar style={{ justifyContent: "center" }}>
+      <Button color="inherit" variant="outlined">
+        Run <PlayArrowIcon />
+      </Button>
+    </Toolbar>
+  );
+}
 
 function ConstraintCardContent({
   num,
@@ -23,29 +125,30 @@ function ConstraintCardContent({
   num: number;
   deleteCard: (arg0: number) => void;
 }) {
+  const { constraints, setConstraints } = useConstraints();
   const editorRef = useRef<any>(null);
-  const [enabled, setEnabled] = useState(true);
+
+  const enabled = constraints[num]?.enabled ?? true;
+  const code = constraints[num]?.code ?? "";
 
   const handleSwitch = () => {
-    setEnabled(!enabled);
+    setConstraints((prev) =>
+      prev.map((c, i) => (i === num ? { ...c, enabled: !c.enabled } : c))
+    );
   };
 
-  // Called when the editor is mounted
   const handleEditorDidMount = (editor: any) => {
     editorRef.current = editor;
   };
 
-  // Example: function to get the value
-  const getEditorValue = () => {
-    if (editorRef.current) {
-      return editorRef.current.getValue();
-    }
-    return "";
+  const handleEditorChange = (value: string | undefined) => {
+    setConstraints((prev) =>
+      prev.map((c, i) => (i === num ? { ...c, code: value ?? "" } : c))
+    );
   };
 
   return (
     <CardContent style={{ padding: "0" }}>
-      {/* Title Bar */}
       <Box
         bgcolor="#d4d4d4"
         padding="8px"
@@ -75,18 +178,18 @@ function ConstraintCardContent({
           </Button>
         </Box>
       </Box>
-      {/* Monaco Editor */}
       <Box height="200px" overflow="hidden">
         <MonacoEditor
           height="100%"
           defaultLanguage="javascript"
-          defaultValue={`// Code for Card ${num + 1}`}
+          value={code}
           options={{
             minimap: { enabled: false },
             scrollBeyondLastLine: false,
           }}
           theme="vs-dark"
           onMount={handleEditorDidMount}
+          onChange={handleEditorChange}
         />
       </Box>
     </CardContent>
@@ -94,9 +197,13 @@ function ConstraintCardContent({
 }
 
 function LeftPane() {
-  const [constraints, setConstraints] = useState<string[]>(["Constraint 1"]);
-  const handleAdd = (newConstraint: string) => {
-    setConstraints([...constraints, newConstraint]);
+  const { constraints, setConstraints } = useConstraints();
+
+  const handleAdd = () => {
+    setConstraints([
+      ...constraints,
+      { code: `// Code for Card ${constraints.length + 1}`, enabled: true },
+    ]);
   };
   const handleDelete = (index: number) => {
     setConstraints(constraints.filter((_, i) => i !== index));
@@ -107,17 +214,16 @@ function LeftPane() {
       {constraints.map((_, index) => (
         <Card
           key={index}
-          style={{ width: "100%%", marginBottom: "16px", marginRight: "24px" }}
+          style={{
+            width: "calc(100% - 32px)",
+            marginBottom: "16px",
+          }}
         >
           <ConstraintCardContent num={index} deleteCard={handleDelete} />
         </Card>
       ))}
       <Card style={{ width: "96%" }}>
-        <Button
-          fullWidth
-          variant="contained"
-          onClick={() => handleAdd(`Constraint ${constraints.length + 1}`)}
-        >
+        <Button fullWidth variant="contained" onClick={handleAdd}>
           Add Constraint <AddIcon />
         </Button>
       </Card>
@@ -126,10 +232,7 @@ function LeftPane() {
 }
 
 function ConstantsSection() {
-  const [constants, setConstants] = useState<string[]>([
-    "Constant 1",
-    "Constant 2",
-  ]);
+  const { constants, setConstants } = useConstants();
   const [isAdding, setIsAdding] = useState(false);
   const [newConstant, setNewConstant] = useState("");
 
@@ -137,9 +240,7 @@ function ConstantsSection() {
     setConstants(constants.filter((_, i) => i !== index));
   };
 
-  const handleAddClick = () => {
-    setIsAdding(true);
-  };
+  const handleAddClick = () => setIsAdding(true);
 
   const handleAddConfirm = () => {
     if (newConstant.trim() !== "") {
@@ -172,7 +273,7 @@ function ConstantsSection() {
         display="flex"
         flexWrap="wrap"
         gap="8px"
-        alignContent="flex-start" // consistent spacing between rows
+        alignContent="flex-start"
       >
         {constants.map((constant, index) => (
           <Chip
@@ -210,13 +311,7 @@ function ConstantsSection() {
 }
 
 function PredicateSection({ width }: { width: number }) {
-  const [predicates, setPredicates] = useState<string[]>([
-    "Predicate 1",
-    "Predicate 2",
-    "Predicate 3",
-    "Predicate 4",
-    "Predicate 5",
-  ]);
+  const { predicates, setPredicates } = usePredicates();
   const [isAdding, setIsAdding] = useState(false);
   const [newPredicate, setNewPredicate] = useState("");
 
@@ -224,9 +319,7 @@ function PredicateSection({ width }: { width: number }) {
     setPredicates(predicates.filter((_, i) => i !== index));
   };
 
-  const handleAddClick = () => {
-    setIsAdding(true);
-  };
+  const handleAddClick = () => setIsAdding(true);
 
   const handleAddConfirm = () => {
     if (newPredicate.trim() !== "") {
@@ -254,7 +347,7 @@ function PredicateSection({ width }: { width: number }) {
       </Box>
       <Box
         maxWidth={width}
-        height="40px" // Set a constant height for the box with chips
+        height="40px"
         overflow="auto"
         padding="8px"
         display="flex"
@@ -315,34 +408,26 @@ function PredicateSection({ width }: { width: number }) {
 }
 
 function FunctionSection({ width }: { width: number }) {
-  const [predicates, setPredicates] = useState<string[]>([
-    "Function 1",
-    "Function 2",
-    "Function 3",
-    "Function 4",
-    "Function 5",
-  ]);
+  const { functions, setFunctions } = useFunctions();
   const [isAdding, setIsAdding] = useState(false);
-  const [newPredicate, setNewPredicate] = useState("");
+  const [newFunction, setNewFunction] = useState("");
 
   const handleDelete = (index: number) => {
-    setPredicates(predicates.filter((_, i) => i !== index));
+    setFunctions(functions.filter((_, i) => i !== index));
   };
 
-  const handleAddClick = () => {
-    setIsAdding(true);
-  };
+  const handleAddClick = () => setIsAdding(true);
 
   const handleAddConfirm = () => {
-    if (newPredicate.trim() !== "") {
-      setPredicates([...predicates, newPredicate.trim()]);
-      setNewPredicate("");
+    if (newFunction.trim() !== "") {
+      setFunctions([...functions, newFunction.trim()]);
+      setNewFunction("");
       setIsAdding(false);
     }
   };
 
   const handleAddCancel = () => {
-    setNewPredicate("");
+    setNewFunction("");
     setIsAdding(false);
   };
 
@@ -359,27 +444,23 @@ function FunctionSection({ width }: { width: number }) {
       </Box>
       <Box
         maxWidth={width}
-        height="40px" // Set a constant height for the box with chips
+        height="40px"
         overflow="auto"
         padding="8px"
         display="flex"
         gap="8px"
         alignContent="flex-start"
       >
-        {predicates.map((predicate, index) => (
-          <Chip
-            key={index}
-            label={predicate}
-            onDelete={() => handleDelete(index)}
-          />
+        {functions.map((fn, index) => (
+          <Chip key={index} label={fn} onDelete={() => handleDelete(index)} />
         ))}
         {isAdding ? (
           <Box display="flex" alignItems="center" gap="8px">
             <input
               type="text"
-              value={newPredicate}
-              onChange={(e) => setNewPredicate(e.target.value)}
-              placeholder="Enter predicate"
+              value={newFunction}
+              onChange={(e) => setNewFunction(e.target.value)}
+              placeholder="Enter function"
               style={{
                 padding: "4px",
                 border: "1px solid #ccc",
@@ -420,26 +501,25 @@ function FunctionSection({ width }: { width: number }) {
 }
 
 function Section({ idx, width }: { idx: number; width: number }) {
-  var Ret = // default content for the section
-    (
-      <>
-        <Box
-          height="40px"
-          bgcolor="#d4d4d4"
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-        >
-          Section Bar
-        </Box>
-        <Box flex={1} overflow="auto" padding="8px">
-          <p>
-            This is the content box. You can add any text, components, or other
-            elements here to display in this section.
-          </p>
-        </Box>
-      </>
-    );
+  let Ret = (
+    <>
+      <Box
+        height="40px"
+        bgcolor="#d4d4d4"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+      >
+        Section Bar
+      </Box>
+      <Box flex={1} overflow="auto" padding="8px">
+        <p>
+          This is the content box. You can add any text, components, or other
+          elements here to display in this section.
+        </p>
+      </Box>
+    </>
+  );
 
   if (idx === 0) {
     Ret = <ConstantsSection />;
@@ -453,9 +533,9 @@ function Section({ idx, width }: { idx: number; width: number }) {
 }
 
 function AppContent() {
-  const [leftWidth, setLeftWidth] = useState(window.innerWidth / 2); // Initialize to half the width of the page
+  const [leftWidth, setLeftWidth] = useState(window.innerWidth / 2);
   const [sectionHeights, setSectionHeights] = useState([
-    window.innerHeight / 3,
+    100,
     window.innerHeight / 3,
     window.innerHeight / 3,
   ]);
@@ -481,7 +561,7 @@ function AppContent() {
     setSectionHeights(newHeights);
   };
 
-  const rightWidth = window.innerWidth - leftWidth - 50; // Adjust for the right pane width and margin
+  const rightWidth = window.innerWidth - leftWidth - 50;
 
   return (
     <Box display="flex" height="100%">
@@ -494,7 +574,6 @@ function AppContent() {
       >
         <LeftPane />
       </Resizable>
-
       {/* Right Pane */}
       <Box
         flex={1}
@@ -533,21 +612,23 @@ function AppContent() {
 function App() {
   return (
     <div className="App">
-      <AppBar>
-        <AppToolbar />
-      </AppBar>
-      <Container
-        style={{
-          position: "relative",
-          marginTop: "64px", // Adjust for AppBar
-          maxWidth: window.innerWidth,
-          height: "calc(100vh - 64px)", // Adjust for AppBar
-          overflow: "hidden",
-          paddingTop: "16px",
-        }}
-      >
-        <AppContent />
-      </Container>
+      <AppProviders>
+        <AppBar>
+          <AppToolbar />
+        </AppBar>
+        <Container
+          style={{
+            position: "relative",
+            marginTop: "64px",
+            maxWidth: window.innerWidth,
+            height: "calc(100vh - 64px)",
+            overflow: "hidden",
+            paddingTop: "16px",
+          }}
+        >
+          <AppContent />
+        </Container>
+      </AppProviders>
     </div>
   );
 }
