@@ -1,7 +1,6 @@
 import { Button } from "@mui/material";
 import { Toolbar } from "@mui/material";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import { useContext } from "react";
 import {
   useConstraints,
   useConstants,

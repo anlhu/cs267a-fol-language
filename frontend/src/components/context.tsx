@@ -4,21 +4,34 @@ type Constraint = {
   code: string;
   enabled: boolean;
 };
+type Constant = {
+  id: number;
+  name: string;
+};
+type Predicate = {
+  name: string;
+  selected: Object;
+  negated: boolean;
+};
+type Function = {
+  name: string;
+  code: string;
+};
 type ConstraintsContextType = {
   constraints: Constraint[];
   setConstraints: React.Dispatch<React.SetStateAction<Constraint[]>>;
 };
 type ConstantsContextType = {
-  constants: string[];
-  setConstants: React.Dispatch<React.SetStateAction<string[]>>;
+  constants: Constant[];
+  setConstants: React.Dispatch<React.SetStateAction<Constant[]>>;
 };
 type PredicatesContextType = {
-  predicates: string[];
-  setPredicates: React.Dispatch<React.SetStateAction<string[]>>;
+  predicates: Predicate[];
+  setPredicates: React.Dispatch<React.SetStateAction<Predicate[]>>;
 };
 type FunctionsContextType = {
-  functions: string[];
-  setFunctions: React.Dispatch<React.SetStateAction<string[]>>;
+  functions: Function[];
+  setFunctions: React.Dispatch<React.SetStateAction<Function[]>>;
 };
 
 const ConstraintsContext = createContext<ConstraintsContextType | undefined>(
@@ -63,9 +76,9 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
   const [constraints, setConstraints] = React.useState<Constraint[]>([
     { code: "// Code for Card 1", enabled: true },
   ]);
-  const [constants, setConstants] = React.useState<string[]>(["Constant 1"]);
-  const [predicates, setPredicates] = React.useState<string[]>(["Predicate 1"]);
-  const [functions, setFunctions] = React.useState<string[]>(["Function 1"]);
+  const [constants, setConstants] = React.useState<Constant[]>([{id: 0, name: "Constant 1"}]);
+  const [predicates, setPredicates] = React.useState<Predicate[]>([{name: "Predicate 1", selected: {}, negated: false}]);
+  const [functions, setFunctions] = React.useState<Function[]>([{name: "Function 1", code: "// Code for Function 1"}]);
 
   return (
     <ConstraintsContext.Provider value={{ constraints, setConstraints }}>
