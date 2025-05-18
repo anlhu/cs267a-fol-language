@@ -16,6 +16,11 @@ type ChipListProps = {
   onAddConfirm: () => void;
   onAddCancel: () => void;
   addPlaceholder: string;
+  editableIndex?: number | null;
+  editInputValue?: string;
+  setEditInputValue?: (val: string) => void;
+  onEditConfirm?: () => void;
+  onEditCancel?: () => void;
 };
 
 function ChipList({
@@ -35,13 +40,7 @@ function ChipList({
   setEditInputValue,
   onEditConfirm,
   onEditCancel,
-}: ChipListProps & {
-  editableIndex?: number | null;
-  editInputValue?: string;
-  setEditInputValue?: (val: string) => void;
-  onEditConfirm?: () => void;
-  onEditCancel?: () => void;
-}) {
+}: ChipListProps) {
   return (
     <>
       {items.map((item, index) => (
@@ -111,204 +110,42 @@ function ChipList({
   );
 }
 
-function ConstantsSection() {
-  const { constants, setConstants } = useConstants();
-  const [isAdding, setIsAdding] = useState(false);
-  const [newConstant, setNewConstant] = useState("");
-  const [newConstantId, setNewConstantId] = useState(1);
-
-  const [editableIndex, setEditableIndex] = useState<number | null>(null);
-  const [editInputValue, setEditInputValue] = useState("");
-
-  const handleDelete = (index: number) => {
-    setConstants(constants.filter((_, i) => i !== index));
-    if (editableIndex === index) setEditableIndex(null);
+type SectionConfig = {
+  label: string;
+  useData: () => {
+    data: any[];
+    setData: (data: any[]) => void;
   };
+  addPlaceholder: string;
+  getNewItem: (name: string) => any;
+  showEditor?: boolean;
+  showTable?: boolean;
+  tableContent?: React.ReactNode;
+};
 
-  const handleAddClick = () => setIsAdding(true);
-
-  const handleAddConfirm = () => {
-    if (newConstant.trim() !== "") {
-      setConstants([...constants, { id: newConstantId, name: newConstant.trim() }]);
-      setNewConstant("");
-      setNewConstantId(newConstantId + 1);
-      setIsAdding(false);
-    }
-  };
-
-  const handleAddCancel = () => {
-    setNewConstant("");
-    setIsAdding(false);
-  };
-
-  const handleChipClick = (index: number) => {
-    // alert(`Clicked constant: ${constants[index].name}`);
-  };
-
-  const handleChipRClick = (index: number) => {
-    setEditableIndex(index);
-    setEditInputValue(constants[index].name);
-  };
-
-  const handleEditConfirm = () => {
-    if (editableIndex !== null && editInputValue.trim() !== "") {
-      setConstants(constants.map((c, i) =>
-        i === editableIndex ? { ...c, name: editInputValue.trim() } : c
-      ));
-      setEditableIndex(null);
-      setEditInputValue("");
-    }
-  };
-
-  const handleEditCancel = () => {
-    setEditableIndex(null);
-    setEditInputValue("");
-  };
-
-  return (
-    <>
-      <Box
-        height="40px"
-        bgcolor="#d4d4d4"
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-      >
-        Constants
-      </Box>
-      <Box
-        flex={1}
-        overflow="auto"
-        padding="8px"
-        display="flex"
-        flexWrap="wrap"
-        gap="8px"
-        alignContent="flex-start"
-      >
-        <ChipList
-          items={constants}
-          onDelete={handleDelete}
-          onClick={handleChipClick}
-          isAdding={isAdding}
-          onAddClick={handleAddClick}
-          onRightClick={handleChipRClick}
-          addInputValue={newConstant}
-          setAddInputValue={setNewConstant}
-          onAddConfirm={handleAddConfirm}
-          onAddCancel={handleAddCancel}
-          addPlaceholder="Enter constant"
-          editableIndex={editableIndex}
-          editInputValue={editInputValue}
-          setEditInputValue={setEditInputValue}
-          onEditConfirm={handleEditConfirm}
-          onEditCancel={handleEditCancel}
-        />
-      </Box>
-    </>
-  );
-}
-
-function PredicateSection({ width }: { width: number }) {
-  const { predicates, setPredicates } = usePredicates();
-  const [isAdding, setIsAdding] = useState(false);
-  const [newPredicate, setNewPredicate] = useState("");
-
-  const [editableIndex, setEditableIndex] = useState<number | null>(null);
-  const [editInputValue, setEditInputValue] = useState("");
-
-  const handleDelete = (index: number) => {
-    setPredicates(predicates.filter((_, i) => i !== index));
-    if (editableIndex === index) setEditableIndex(null);
-  };
-
-  const handleAddClick = () => setIsAdding(true);
-
-  const handleAddConfirm = () => {
-    if (newPredicate.trim() !== "") {
-      setPredicates([
-        ...predicates,
-        { name: newPredicate.trim(), selected: {}, negated: false },
-      ]);
-      setNewPredicate("");
-      setIsAdding(false);
-    }
-  };
-
-  const handleAddCancel = () => {
-    setNewPredicate("");
-    setIsAdding(false);
-  };
-
-  const handleChipClick = (index: number) => {
-    alert(`Clicked predicate: ${predicates[index].name}`);
-  };
-
-  const handleChipRClick = (index: number) => {
-    setEditableIndex(index);
-    setEditInputValue(predicates[index].name);
-  };
-
-  const handleEditConfirm = () => {
-    if (editableIndex !== null && editInputValue.trim() !== "") {
-      setPredicates(predicates.map((p, i) =>
-        i === editableIndex ? { ...p, name: editInputValue.trim() } : p
-      ));
-      setEditableIndex(null);
-      setEditInputValue("");
-    }
-  };
-
-  const handleEditCancel = () => {
-    setEditableIndex(null);
-    setEditInputValue("");
-  };
-
-  return (
-    <>
-      <Box
-        height="40px"
-        bgcolor="#d4d4d4"
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-      >
-        Predicates
-      </Box>
-      <Box
-        maxWidth={width}
-        height="40px"
-        overflow="auto"
-        padding="8px"
-        display="flex"
-        gap="8px"
-        alignContent="flex-start"
-      >
-        <ChipList
-          items={predicates}
-          onDelete={handleDelete}
-          onClick={handleChipClick}
-          onRightClick={handleChipRClick}
-          isAdding={isAdding}
-          onAddClick={handleAddClick}
-          addInputValue={newPredicate}
-          setAddInputValue={setNewPredicate}
-          onAddConfirm={handleAddConfirm}
-          onAddCancel={handleAddCancel}
-          addPlaceholder="Enter predicate"
-          editableIndex={editableIndex}
-          editInputValue={editInputValue}
-          setEditInputValue={setEditInputValue}
-          onEditConfirm={handleEditConfirm}
-          onEditCancel={handleEditCancel}
-        />
-      </Box>
-      <Box
-        maxWidth={width}
-        flex={1}
-        overflow="auto"
-        padding="8px"
-        borderTop="1px solid #ccc"
-      >
+const sectionConfigs: SectionConfig[] = [
+  // Constants config
+  {
+    label: "Constants",
+    useData: () => {
+      const { constants, setConstants } = useConstants();
+      return { data: constants, setData: setConstants };
+    },
+    addPlaceholder: "Enter constant",
+    getNewItem: (name: string) => ({ id: Date.now(), name }),
+  },
+  // Predicates config
+  {
+    label: "Predicates",
+    useData: () => {
+      const { predicates, setPredicates } = usePredicates();
+      return { data: predicates, setData: setPredicates };
+    },
+    addPlaceholder: "Enter predicate",
+    getNewItem: (name: string) => ({ name, selected: {}, negated: false }),
+    showTable: true,
+    tableContent: (
+      <>
         <p>
           This is an additional scrollable box. You can add any content here,
           and it will scroll independently of the chips above.
@@ -319,56 +156,67 @@ function PredicateSection({ width }: { width: number }) {
         <p>Example content line 4</p>
         <p>Example content line 5</p>
         <p>Example content line 6</p>
-      </Box>
-    </>
-  );
-}
+      </>
+    ),
+  },
+  // Functions config
+  {
+    label: "Functions",
+    useData: () => {
+      const { functions, setFunctions } = useFunctions();
+      return { data: functions, setData: setFunctions };
+    },
+    addPlaceholder: "Enter function",
+    getNewItem: (name: string) => ({ name, code: "// Code for Function" }),
+    showEditor: true,
+  },
+];
 
-function FunctionSection({ width }: { width: number }) {
-  const { functions, setFunctions } = useFunctions();
+export function Section({ idx, width }: { idx: number; width: number }) {
+  const config = sectionConfigs[idx];
+  const { data, setData } = config.useData();
+
   const [isAdding, setIsAdding] = useState(false);
-  const [newFunction, setNewFunction] = useState("");
-
+  const [addInputValue, setAddInputValue] = useState("");
   const [editableIndex, setEditableIndex] = useState<number | null>(null);
   const [editInputValue, setEditInputValue] = useState("");
 
   const handleDelete = (index: number) => {
-    setFunctions(functions.filter((_, i) => i !== index));
+    setData(data.filter((_: any, i: number) => i !== index));
     if (editableIndex === index) setEditableIndex(null);
   };
 
   const handleAddClick = () => setIsAdding(true);
 
   const handleAddConfirm = () => {
-    if (newFunction.trim() !== "") {
-      setFunctions([
-        ...functions,
-        { name: newFunction.trim(), code: "// Code for Function" },
-      ]);
-      setNewFunction("");
+    if (addInputValue.trim() !== "") {
+      setData([...data, config.getNewItem(addInputValue.trim())]);
+      setAddInputValue("");
       setIsAdding(false);
     }
   };
 
   const handleAddCancel = () => {
-    setNewFunction("");
+    setAddInputValue("");
     setIsAdding(false);
   };
 
   const handleChipClick = (index: number) => {
-    alert(`Clicked function: ${functions[index].name}`);
+    alert(`Clicked ${config.label.toLowerCase()}: ${data[index].name}`);
   };
 
   const handleChipRClick = (index: number) => {
     setEditableIndex(index);
-    setEditInputValue(functions[index].name);
+    setEditInputValue(data[index].name);
   };
 
   const handleEditConfirm = () => {
     if (editableIndex !== null && editInputValue.trim() !== "") {
-      setFunctions(functions.map((f, i) =>
-        i === editableIndex ? { ...f, name: editInputValue.trim() } : f
-      ));
+      setData(
+        data.map((item: any, i: number) =>
+          i === editableIndex ? { ...item, name: editInputValue.trim() } : item
+        )
+      );
       setEditableIndex(null);
       setEditInputValue("");
     }
@@ -380,7 +228,7 @@ function FunctionSection({ width }: { width: number }) {
   };
 
   return (
-    <>
+    <Box borderTop="2px solid #888">
       <Box
         height="40px"
         bgcolor="#d4d4d4"
@@ -388,7 +236,7 @@ function FunctionSection({ width }: { width: number }) {
         alignItems="center"
         justifyContent="center"
       >
-        Functions
+        {config.label}
       </Box>
       <Box
         maxWidth={width}
@@ -398,19 +246,20 @@ function FunctionSection({ width }: { width: number }) {
         display="flex"
         gap="8px"
         alignContent="flex-start"
+        flexWrap="wrap"
       >
         <ChipList
-          items={functions}
+          items={data}
           onDelete={handleDelete}
           onClick={handleChipClick}
           onRightClick={handleChipRClick}
           isAdding={isAdding}
           onAddClick={handleAddClick}
-          addInputValue={newFunction}
-          setAddInputValue={setNewFunction}
+          addInputValue={addInputValue}
+          setAddInputValue={setAddInputValue}
           onAddConfirm={handleAddConfirm}
           onAddCancel={handleAddCancel}
-          addPlaceholder="Enter function"
+          addPlaceholder={config.addPlaceholder}
           editableIndex={editableIndex}
           editInputValue={editInputValue}
           setEditInputValue={setEditInputValue}
@@ -418,57 +267,39 @@ function FunctionSection({ width }: { width: number }) {
           onEditCancel={handleEditCancel}
         />
       </Box>
-      <Box
-        maxWidth={width}
-        flex={1}
-        overflow="auto"
-        padding="8px"
-        borderTop="1px solid #ccc"
-      >
-        <MonacoEditor
-          height="500px"
-          defaultLanguage="javascript"
-          defaultValue={`// Add your code here`}
-          options={{
-            minimap: { enabled: false },
-            scrollBeyondLastLine: false,
-          }}
-          theme="vs-dark"
-        />
-      </Box>
-    </>
+      {config.showTable && (
+        <Box
+          maxWidth={width}
+          flex={1}
+          overflow="auto"
+          padding="8px"
+          borderTop="1px solid #ccc"
+        >
+          {config.tableContent}
+        </Box>
+      )}
+      {config.showEditor && (data.length) ? (
+        <Box
+          maxWidth={width}
+          flex={1}
+          overflow="auto"
+          padding="8px"
+          borderTop="1px solid #ccc"
+        >
+          <MonacoEditor
+            height="500px"
+            defaultLanguage="javascript"
+            defaultValue={`// Add your code here`}
+            options={{
+              minimap: { enabled: false },
+              scrollBeyondLastLine: false,
+            }}
+            theme="vs-dark"
+          />
+        </Box>
+      ) : (
+        <>Add a function</>
+      )}
+    </Box>
   );
-}
-
-
-export function Section({ idx, width }: { idx: number; width: number }) {
-  let Ret = (
-    <>
-      <Box
-        height="40px"
-        bgcolor="#d4d4d4"
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-      >
-        Section Bar
-      </Box>
-      <Box flex={1} overflow="auto" padding="8px">
-        <p>
-          This is the content box. You can add any text, components, or other
-          elements here to display in this section.
-        </p>
-      </Box>
-    </>
-  );
-
-  if (idx === 0) {
-    Ret = <ConstantsSection />;
-  } else if (idx === 1) {
-    Ret = <PredicateSection width={width} />;
-  } else if (idx === 2) {
-    Ret = <FunctionSection width={width} />;
-  }
-
-  return <Box borderTop="2px solid #888">{Ret}</Box>;
 }
