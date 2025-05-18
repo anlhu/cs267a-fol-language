@@ -23,7 +23,7 @@ export function AppToolbar() {
       }));
 
     const payload = {
-      decoded_enabled_constraints,
+      constraints: decoded_enabled_constraints,
       constants,
       predicates,
       functions,

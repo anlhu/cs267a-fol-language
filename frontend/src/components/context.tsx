@@ -10,12 +10,12 @@ type Constant = {
 };
 type Predicate = {
   name: string;
-  selected: Object;
+  data: Object;
   negated: boolean;
 };
 type Function = {
   name: string;
-  code: string;
+  data: string;
 };
 type ConstraintsContextType = {
   constraints: Constraint[];
@@ -77,8 +77,8 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
     { code: "// Code for Card 1", enabled: true },
   ]);
   const [constants, setConstants] = React.useState<Constant[]>([{id: 0, name: "Constant 1"}]);
-  const [predicates, setPredicates] = React.useState<Predicate[]>([{name: "Predicate 1", selected: {}, negated: false}]);
-  const [functions, setFunctions] = React.useState<Function[]>([{name: "Function 1", code: "// Code for Function 1"}]);
+  const [predicates, setPredicates] = React.useState<Predicate[]>([{name: "Predicate 1", data: {}, negated: false}]);
+  const [functions, setFunctions] = React.useState<Function[]>([{name: "Function 1", data: "// Code for Function 1"}]);
 
   return (
     <ConstraintsContext.Provider value={{ constraints, setConstraints }}>

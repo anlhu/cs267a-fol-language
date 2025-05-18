@@ -7,7 +7,7 @@ import { useConstants, usePredicates, useFunctions } from "./context";
 type ChipListProps = {
   items: { name: string }[];
   onDelete: (index: number) => void;
-  onClick?: (index: number) => void;
+  onClick: (index: number) => void;
   onRightClick?: (index: number, event: React.MouseEvent) => void;
   isAdding: boolean;
   onAddClick: () => void;
@@ -21,6 +21,7 @@ type ChipListProps = {
   setEditInputValue?: (val: string) => void;
   onEditConfirm?: () => void;
   onEditCancel?: () => void;
+  selectedIndex?: number | null;
 };
 
 function ChipList({
@@ -40,13 +41,21 @@ function ChipList({
   setEditInputValue,
   onEditConfirm,
   onEditCancel,
+  selectedIndex,
 }: ChipListProps) {
   return (
     <>
       {items.map((item, index) => (
         <span
           key={index}
-          onContextMenu={onRightClick ? (e) => { e.preventDefault(); onRightClick(index, e); } : undefined}
+          onContextMenu={
+            onRightClick
+              ? (e) => {
+                  e.preventDefault();
+                  onRightClick(index, e);
+                }
+              : undefined
+          }
           style={{ display: "inline-flex" }}
         >
           {editableIndex === index ? (
@@ -78,7 +87,15 @@ function ChipList({
               label={item.name}
               onDelete={() => onDelete(index)}
               clickable={!!onClick}
-              onClick={onClick ? () => onClick(index) : undefined}
+              onClick={() => onClick(index)}
+              sx={
+                selectedIndex === index
+                  ? {
+                      bgcolor: "#888",
+                      color: "#fff",
+                    }
+                  : undefined
+              }
             />
           )}
         </span>
@@ -142,7 +159,7 @@ const sectionConfigs: SectionConfig[] = [
       return { data: predicates, setData: setPredicates };
     },
     addPlaceholder: "Enter predicate",
-    getNewItem: (name: string) => ({ name, selected: {}, negated: false }),
+    getNewItem: (name: string) => ({ name, data: {}, negated: false }),
     showTable: true,
     tableContent: (
       <>
@@ -167,7 +184,7 @@ const sectionConfigs: SectionConfig[] = [
       return { data: functions, setData: setFunctions };
     },
     addPlaceholder: "Enter function",
-    getNewItem: (name: string) => ({ name, code: "// Code for Function" }),
+    getNewItem: (name: string) => ({ name, data: `// Code for ${name}` }),
     showEditor: true,
   },
 ];
@@ -181,6 +198,15 @@ export function Section({ idx, width }: { idx: number; width: number }) {
   const [editableIndex, setEditableIndex] = useState<number | null>(null);
   const [editInputValue, setEditInputValue] = useState("");
 
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(0);
+
+  const selectedItem = data[selectedIndex ?? -1];
+
+  const handleChipClick = (index: number) => {
+    setSelectedIndex(index);
+    // other stuff
+  };
+
   const handleDelete = (index: number) => {
     setData(data.filter((_: any, i: number) => i !== index));
     if (editableIndex === index) setEditableIndex(null);
@@ -193,16 +219,13 @@ export function Section({ idx, width }: { idx: number; width: number }) {
       setData([...data, config.getNewItem(addInputValue.trim())]);
       setAddInputValue("");
       setIsAdding(false);
+      setSelectedIndex(data.length);
     }
   };
 
   const handleAddCancel = () => {
     setAddInputValue("");
     setIsAdding(false);
-  };
-
-  const handleChipClick = (index: number) => {
-    alert(`Clicked ${config.label.toLowerCase()}: ${data[index].name}`);
   };
 
   const handleChipRClick = (index: number) => {
@@ -225,6 +248,13 @@ export function Section({ idx, width }: { idx: number; width: number }) {
   const handleEditCancel = () => {
     setEditableIndex(null);
     setEditInputValue("");
+  };
+
+  const handleEditorChange = (value: string | undefined) => {
+    const newData = data.map((f) =>
+      f.name === selectedItem.name ? { ...f, data: value ?? "" } : f
+    );
+    setData(newData);
   };
 
   return (
@@ -265,6 +295,7 @@ export function Section({ idx, width }: { idx: number; width: number }) {
           setEditInputValue={setEditInputValue}
           onEditConfirm={handleEditConfirm}
           onEditCancel={handleEditCancel}
+          selectedIndex={selectedIndex}
         />
       </Box>
       {config.showTable && (
@@ -278,7 +309,7 @@ export function Section({ idx, width }: { idx: number; width: number }) {
           {config.tableContent}
         </Box>
       )}
-      {config.showEditor && (data.length) ? (
+      {config.showEditor && data.length ? (
         <Box
           maxWidth={width}
           flex={1}
@@ -287,9 +318,11 @@ export function Section({ idx, width }: { idx: number; width: number }) {
           borderTop="1px solid #ccc"
         >
           <MonacoEditor
-            height="500px"
+            height="200px"
+            width="90%"
             defaultLanguage="javascript"
-            defaultValue={`// Add your code here`}
+            value={selectedItem?.data}
+            onChange={handleEditorChange}
             options={{
               minimap: { enabled: false },
               scrollBeyondLastLine: false,
