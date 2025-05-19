@@ -82,7 +82,6 @@ export function TruthTable({
   }
   const tuples = getTuples(constants, paramCount);
 
-  // Handle toggling truth value
   const handleToggle = (key: string) => {
     setTruthTable((prev) => ({
       ...prev,
