@@ -1,5 +1,5 @@
 const express = require('express');
-const antlr4  = require('antlr4');                    // npm i antlr4
+const antlr4  = require('antlr4');                    
 const { InputStream, CommonTokenStream } = antlr4;
 
 const FolLexer  = (require('./lang/js/folLexer').FolLexer   ||
@@ -19,7 +19,6 @@ function isParsable(text) {
   const tokens = new CommonTokenStream(lexer);
   const parser = new FolParser(tokens);
 
-  /* a 7-line “listener” that just counts syntax errors */
   const counter = { 
     count: 0, 
     syntaxError() { this.count += 1; }, 
@@ -28,11 +27,11 @@ function isParsable(text) {
     reportContextSensitivity()  {}
     };
 
-  parser.removeErrorListeners();         // silence default console output
+  parser.removeErrorListeners();         
   parser.addErrorListener(counter);
 
   parser.buildParseTrees = true;
-  parser.condition();                    // <-- entry rule
+  parser.condition();                    
 
   return counter.count == 0;
 }

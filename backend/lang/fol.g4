@@ -1,5 +1,5 @@
 /*
-* based on FOL written for Antlr4 by Kamil Kapałka, with tweeks
+* based on FOL written for Antlr4 by Kamil Kapałka, with tweaks
 *
 */
 
