@@ -3,6 +3,7 @@ import MonacoEditor from "@monaco-editor/react";
 import { useState } from "react";
 import { Box } from "@mui/material";
 import { useConstants, usePredicates, useFunctions } from "./context";
+import { TruthTable } from "./truth_table";
 
 type ChipListProps = {
   items: { name: string }[];
@@ -137,7 +138,6 @@ type SectionConfig = {
   getNewItem: (name: string) => any;
   showEditor?: boolean;
   showTable?: boolean;
-  tableContent?: React.ReactNode;
 };
 
 const sectionConfigs: SectionConfig[] = [
@@ -161,20 +161,6 @@ const sectionConfigs: SectionConfig[] = [
     addPlaceholder: "Enter predicate",
     getNewItem: (name: string) => ({ name, data: {}, negated: false }),
     showTable: true,
-    tableContent: (
-      <>
-        <p>
-          This is an additional scrollable box. You can add any content here,
-          and it will scroll independently of the chips above.
-        </p>
-        <p>Example content line 1</p>
-        <p>Example content line 2</p>
-        <p>Example content line 3</p>
-        <p>Example content line 4</p>
-        <p>Example content line 5</p>
-        <p>Example content line 6</p>
-      </>
-    ),
   },
   // Functions config
   {
@@ -298,41 +284,50 @@ export function Section({ idx, width }: { idx: number; width: number }) {
           selectedIndex={selectedIndex}
         />
       </Box>
-      {config.showTable && (
-        <Box
-          maxWidth={width}
-          flex={1}
-          overflow="auto"
-          padding="8px"
-          borderTop="1px solid #ccc"
-        >
-          {config.tableContent}
-        </Box>
-      )}
-      {config.showEditor && data.length ? (
-        <Box
-          maxWidth={width}
-          flex={1}
-          overflow="auto"
-          padding="8px"
-          borderTop="1px solid #ccc"
-        >
-          <MonacoEditor
-            height="200px"
-            width="90%"
-            defaultLanguage="javascript"
-            value={selectedItem?.data}
-            onChange={handleEditorChange}
-            options={{
-              minimap: { enabled: false },
-              scrollBeyondLastLine: false,
-            }}
-            theme="vs-dark"
-          />
-        </Box>
-      ) : (
-        <>Add a function</>
-      )}
+      {config.showTable &&
+        (data.length ? (
+          <Box
+            maxWidth={width}
+            flex={1}
+            overflow="auto"
+            padding="8px"
+            borderTop="1px solid #ccc"
+          >
+            <TruthTable
+              selectedItem={selectedItem}
+              selectedIndex={selectedIndex}
+              data={data}
+              setData={setData}
+            />
+          </Box>
+        ) : (
+          <>Add a predicate</>
+        ))}
+      {config.showEditor &&
+        (data.length ? (
+          <Box
+            maxWidth={width}
+            flex={1}
+            overflow="auto"
+            padding="8px"
+            borderTop="1px solid #ccc"
+          >
+            <MonacoEditor
+              height="200px"
+              width="90%"
+              defaultLanguage="javascript"
+              value={selectedItem?.data}
+              onChange={handleEditorChange}
+              options={{
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+              }}
+              theme="vs-dark"
+            />
+          </Box>
+        ) : (
+          <>Add a function</>
+        ))}
     </Box>
   );
 }
