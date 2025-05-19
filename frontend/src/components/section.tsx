@@ -190,12 +190,24 @@ export function Section({ idx, width }: { idx: number; width: number }) {
 
   const handleChipClick = (index: number) => {
     setSelectedIndex(index);
-    // other stuff
   };
 
   const handleDelete = (index: number) => {
     setData(data.filter((_: any, i: number) => i !== index));
     if (editableIndex === index) setEditableIndex(null);
+
+    // Adjust selectedIndex so cant edit after delete
+    if (selectedIndex === index) {
+      if (data.length === 1) {
+        setSelectedIndex(null);
+      } else if (index > 0) {
+        setSelectedIndex(index - 1);
+      } else {
+        setSelectedIndex(0);
+      }
+    } else if (selectedIndex !== null && selectedIndex > index) {
+      setSelectedIndex(selectedIndex - 1);
+    }
   };
 
   const handleAddClick = () => setIsAdding(true);
