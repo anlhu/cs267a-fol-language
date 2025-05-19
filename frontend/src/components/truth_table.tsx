@@ -61,11 +61,11 @@ export function TruthTable({
           : item
       )
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paramCount, truthTable, negated]);
 
   // Update table when selected item changes
   useEffect(() => {
+    if (selectedIndex === null) return;
     setParamCount(
       typeof selectedItem.data.paramCount === "number"
         ? selectedItem.data.paramCount
@@ -73,8 +73,7 @@ export function TruthTable({
     );
     setNegated(!!selectedItem.negated);
     setTruthTable(selectedItem.data.truthTable || {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedItem]);
+  }, [selectedIndex]);
 
   // Generate all combinations of constants for paramCount
   function getTuples(arr: any[], k: number): any[][] {
