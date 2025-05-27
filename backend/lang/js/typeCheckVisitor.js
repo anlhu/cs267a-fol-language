@@ -1,12 +1,11 @@
 import folVisitor from './folVisitor.js';
-import antlr4 from 'antlr4';
 
 // A simple symbol table to hold declarations
 class SymbolTable {
-    constructor() {
+    constructor() { // NOTE: arity means num_args
         this.functions = new Map(); // name -> { arity }
         this.predicates = new Map(); // name -> { arity }
-        this.constants = new Map(); // name -> (unused sort)
+        this.constants = new Map(); // name -> true 
     }
 
     registerFunction(name, arity) {
