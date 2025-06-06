@@ -54,7 +54,7 @@ pred_constant
 
 //individual constant - used in single predicates
 ind_constant
-    : LOWER_CONSTANT
+    : UPPER_CONSTANT
     ;
 
 //used to create functions, np. .presidentOf(?America) = #Trump

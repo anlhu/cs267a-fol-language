@@ -3,23 +3,20 @@ import folParser from './folParser.js';
 import folVisitor from './folVisitor.js';
 
 
-// Human(Socrates) -> forall(x) Father(Father, x)
+// example: 
+// Human(Socrates) -> forall(x) exists(y) Father(y, x)
+// ->
+// def implies(x, y):
+//     return not x or y
+//
+// def iff(x, y):
+//     return (x and y) or (not x and not y)
+//        
+// def con_0():
+//     return implies(Human("Socrates"), all([any([Father(y, x) for y in constants]) for x in constants])) 
 
-// transform foralls and exists to lambdas
-// not Human(Socrates) and all([Father(Father, x) for x in constants])
+// note that constants should be capitalized in the input, e.g. "Socrates" instead of "socrates", variables should be lowercase, e.g. "x" instead of "X"
 
-// exists(x) Human(x)
-
-// for x in constants:
-//     if Human(x): return (True, None)
-//     else: return (False, Human(x))
-
-// forall(x) exists(y) Human(x) -> Father(y, x)
-
-// output: (True, None) or (False, unsatisfied predicate)
-// True if data in table satisfies the statement
-// False otherwise
-// for constant in constants:
 
 export default class TranspileVisitor extends folVisitor {
 
@@ -28,9 +25,11 @@ export default class TranspileVisitor extends folVisitor {
         console.log(antlr4.tree.Trees.toStringTree(ctx, folParser.ruleNames));
 
         const formulas = ctx.formula();
-        let res = "";
-        for (const formula of formulas) {
-            res += this.visit(formula) + '\n';
+       let res = "def implies(x, y):\n    return not x or y\n\ndef iff(x, y):\n    return (x and y) or (not x and not y)\n\n";
+
+        for (const [i, formula] of formulas.entries()) {
+            const con = `def con_${i}():\n    return ${this.visit(formula)}`
+            res += con + '\n';
         }
 
 		return res;
@@ -100,7 +99,7 @@ export default class TranspileVisitor extends folVisitor {
             return '"' + ctx.ind_constant().getText() + '"';
         }
         else if (ctx.variable()) {
-            return ctx.variable().getText(); //TODO: disambiguate var and inc_constant in grammar
+            return ctx.variable().getText(); 
         }
 
 	}

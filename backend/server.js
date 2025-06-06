@@ -72,9 +72,23 @@ app.post('/parse', (req, res) => {
   res.json({ parsed: isParsable(input) });
 });
 
-app.get('/', (req, res) => {
-  console.log(transpile("Human(socrates) -> forall(x) exists(y) Father(y, x)"));
-})
+app.post('/transpile', (req, res) => {
+  const { input } = req.body;
+  if (typeof input !== 'string') {
+    return res.status(400).json({ error: 'Input must be a string.' });
+  }
+  
+  try {
+    const result = transpile(input);
+    res.json({ transpiled: result });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// app.get('/', (req, res) => {
+//   console.log(transpile("Human(Socrates) -> forall(x) exists(y) Father(y, x)"));
+// })
 
 
 app.listen(port, () =>

@@ -1,6 +1,7 @@
 // Generated from fol.g4 by ANTLR 4.13.2
 // jshint ignore: start
 import antlr4 from 'antlr4';
+import folListener from './folListener.js';
 import folVisitor from './folVisitor.js';
 
 const serializedATN = [4,1,15,112,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,
@@ -32,7 +33,7 @@ const serializedATN = [4,1,15,112,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,
 0,92,93,1,0,0,0,93,95,1,0,0,0,94,92,1,0,0,0,95,96,5,3,0,0,96,98,1,0,0,0,
 97,82,1,0,0,0,97,83,1,0,0,0,97,84,1,0,0,0,98,5,1,0,0,0,99,100,7,0,0,0,100,
 7,1,0,0,0,101,102,5,9,0,0,102,9,1,0,0,0,103,104,5,8,0,0,104,11,1,0,0,0,105,
-106,5,9,0,0,106,13,1,0,0,0,107,108,5,9,0,0,108,15,1,0,0,0,109,110,5,1,0,
+106,5,8,0,0,106,13,1,0,0,0,107,108,5,9,0,0,108,15,1,0,0,0,109,110,5,1,0,
 0,110,17,1,0,0,0,7,23,29,62,71,79,92,97];
 
 
@@ -416,7 +417,7 @@ export default class folParser extends antlr4.Parser {
 	    try {
 	        this.enterOuterAlt(localctx, 1);
 	        this.state = 105;
-	        this.match(folParser.LOWER_CONSTANT);
+	        this.match(folParser.UPPER_CONSTANT);
 	    } catch (re) {
 	    	if(re instanceof antlr4.error.RecognitionException) {
 		        localctx.exception = re;
@@ -548,6 +549,18 @@ class ConditionContext extends antlr4.ParserRuleContext {
 	};
 
 
+	enterRule(listener) {
+	    if(listener instanceof folListener ) {
+	        listener.enterCondition(this);
+		}
+	}
+
+	exitRule(listener) {
+	    if(listener instanceof folListener ) {
+	        listener.exitCondition(this);
+		}
+	}
+
 	accept(visitor) {
 	    if ( visitor instanceof folVisitor ) {
 	        return visitor.visitCondition(this);
@@ -644,6 +657,18 @@ class FormulaContext extends antlr4.ParserRuleContext {
 	    return this.getToken(folParser.EQUAL, 0);
 	};
 
+	enterRule(listener) {
+	    if(listener instanceof folListener ) {
+	        listener.enterFormula(this);
+		}
+	}
+
+	exitRule(listener) {
+	    if(listener instanceof folListener ) {
+	        listener.exitFormula(this);
+		}
+	}
+
 	accept(visitor) {
 	    if ( visitor instanceof folVisitor ) {
 	        return visitor.visitFormula(this);
@@ -713,6 +738,18 @@ class TermContext extends antlr4.ParserRuleContext {
 	    }
 	};
 
+	enterRule(listener) {
+	    if(listener instanceof folListener ) {
+	        listener.enterTerm(this);
+		}
+	}
+
+	exitRule(listener) {
+	    if(listener instanceof folListener ) {
+	        listener.exitTerm(this);
+		}
+	}
+
 	accept(visitor) {
 	    if ( visitor instanceof folVisitor ) {
 	        return visitor.visitTerm(this);
@@ -756,6 +793,18 @@ class Bin_connectiveContext extends antlr4.ParserRuleContext {
 	    return this.getToken(folParser.BICOND, 0);
 	};
 
+	enterRule(listener) {
+	    if(listener instanceof folListener ) {
+	        listener.enterBin_connective(this);
+		}
+	}
+
+	exitRule(listener) {
+	    if(listener instanceof folListener ) {
+	        listener.exitBin_connective(this);
+		}
+	}
+
 	accept(visitor) {
 	    if ( visitor instanceof folVisitor ) {
 	        return visitor.visitBin_connective(this);
@@ -786,6 +835,18 @@ class VariableContext extends antlr4.ParserRuleContext {
 	LOWER_CONSTANT() {
 	    return this.getToken(folParser.LOWER_CONSTANT, 0);
 	};
+
+	enterRule(listener) {
+	    if(listener instanceof folListener ) {
+	        listener.enterVariable(this);
+		}
+	}
+
+	exitRule(listener) {
+	    if(listener instanceof folListener ) {
+	        listener.exitVariable(this);
+		}
+	}
 
 	accept(visitor) {
 	    if ( visitor instanceof folVisitor ) {
@@ -818,6 +879,18 @@ class Pred_constantContext extends antlr4.ParserRuleContext {
 	    return this.getToken(folParser.UPPER_CONSTANT, 0);
 	};
 
+	enterRule(listener) {
+	    if(listener instanceof folListener ) {
+	        listener.enterPred_constant(this);
+		}
+	}
+
+	exitRule(listener) {
+	    if(listener instanceof folListener ) {
+	        listener.exitPred_constant(this);
+		}
+	}
+
 	accept(visitor) {
 	    if ( visitor instanceof folVisitor ) {
 	        return visitor.visitPred_constant(this);
@@ -845,9 +918,21 @@ class Ind_constantContext extends antlr4.ParserRuleContext {
         this.ruleIndex = folParser.RULE_ind_constant;
     }
 
-	LOWER_CONSTANT() {
-	    return this.getToken(folParser.LOWER_CONSTANT, 0);
+	UPPER_CONSTANT() {
+	    return this.getToken(folParser.UPPER_CONSTANT, 0);
 	};
+
+	enterRule(listener) {
+	    if(listener instanceof folListener ) {
+	        listener.enterInd_constant(this);
+		}
+	}
+
+	exitRule(listener) {
+	    if(listener instanceof folListener ) {
+	        listener.exitInd_constant(this);
+		}
+	}
 
 	accept(visitor) {
 	    if ( visitor instanceof folVisitor ) {
@@ -880,6 +965,18 @@ class Func_constantContext extends antlr4.ParserRuleContext {
 	    return this.getToken(folParser.LOWER_CONSTANT, 0);
 	};
 
+	enterRule(listener) {
+	    if(listener instanceof folListener ) {
+	        listener.enterFunc_constant(this);
+		}
+	}
+
+	exitRule(listener) {
+	    if(listener instanceof folListener ) {
+	        listener.exitFunc_constant(this);
+		}
+	}
+
 	accept(visitor) {
 	    if ( visitor instanceof folVisitor ) {
 	        return visitor.visitFunc_constant(this);
@@ -907,6 +1004,18 @@ class SeparatorContext extends antlr4.ParserRuleContext {
         this.ruleIndex = folParser.RULE_separator;
     }
 
+
+	enterRule(listener) {
+	    if(listener instanceof folListener ) {
+	        listener.enterSeparator(this);
+		}
+	}
+
+	exitRule(listener) {
+	    if(listener instanceof folListener ) {
+	        listener.exitSeparator(this);
+		}
+	}
 
 	accept(visitor) {
 	    if ( visitor instanceof folVisitor ) {
