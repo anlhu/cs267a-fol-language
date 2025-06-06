@@ -2,22 +2,22 @@ const express = require('express');
 const antlr4  = require('antlr4');                    
 const { InputStream, CommonTokenStream } = antlr4;
 
-const FolLexer  = (require('./lang/js/folLexer').FolLexer   ||
-                   require('./lang/js/folLexer').default);
-const FolParser = (require('./lang/js/folParser').FolParser ||
-                   require('./lang/js/folParser').default);
+
+const folLexer = require('./lang/js/folLexer.js').default;
+const folParser = require('./lang/js/folParser.js').default;
+const transpileVisitor = require('./lang/js/transpileVisitor.js').default;
 
 const app  = express();
-const port = 3000;
+const port = 8080;
 
 app.use(express.json());
 
 /* ---------- helper ---------- */
 function isParsable(text) {
   const chars  = new InputStream(text);
-  const lexer  = new FolLexer(chars);
+  const lexer  = new folLexer(chars);
   const tokens = new CommonTokenStream(lexer);
-  const parser = new FolParser(tokens);
+  const parser = new folParser(tokens);
 
   const counter = { 
     count: 0, 
@@ -36,6 +36,31 @@ function isParsable(text) {
   return counter.count == 0;
 }
 
+function transpile(text) {
+  const chars  = new InputStream(text);
+  const lexer  = new folLexer(chars);
+  const tokens = new CommonTokenStream(lexer);
+  const parser = new folParser(tokens);
+
+  parser.removeErrorListeners();         
+  parser.addErrorListener({
+    syntaxError: (recognizer, offendingSymbol, line, column, msg, e) => {
+      throw new Error(`Syntax error at line ${line}:${column} – ${msg}`);
+    },
+    reportAmbiguity:            () => {},
+    reportAttemptingFullContext: () => {},
+    reportContextSensitivity:    () => {}
+  });
+
+  parser.buildParseTrees = true;
+  const tree = parser.condition();
+
+  const tv = new transpileVisitor();
+  const result = tv.visit(tree);
+  
+  return result;
+}
+
 // console.log(isParsable("forall(x) exists(y) Human(x) -> Father(y,x)"));
 
 /* ---------- API ---------- */
@@ -46,6 +71,11 @@ app.post('/parse', (req, res) => {
   }
   res.json({ parsed: isParsable(input) });
 });
+
+app.get('/', (req, res) => {
+  console.log(transpile("Human(socrates) -> forall(x) exists(y) Father(y, x)"));
+})
+
 
 app.listen(port, () =>
   console.log(`Parser API running at http://localhost:${port}`)
