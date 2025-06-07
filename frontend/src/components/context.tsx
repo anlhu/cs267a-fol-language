@@ -1,9 +1,19 @@
 import React, { createContext, useContext } from "react";
 
+type Evaluation = {
+  predicate: string;
+  args: string[];
+  value: boolean;
+};
+
 type Constraint = {
   code: string;
   enabled: boolean;
+  satisfied?: boolean;
+  error?: string;
+  evaluations?: Evaluation[];
 };
+
 type Constant = {
   id: number;
   name: string;
@@ -73,12 +83,88 @@ export const useFunctions = () => {
 };
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
-  const [constraints, setConstraints] = React.useState<Constraint[]>([
-    { code: "// Code for Card 1", enabled: true },
+  const [constants, setConstants] = React.useState<Constant[]>([
+    { id: 1, name: "Zeus" },
+    { id: 2, name: "Hera" },
+    { id: 3, name: "Apollo" },
+    { id: 4, name: "Athena" }
   ]);
-  const [constants, setConstants] = React.useState<Constant[]>([{id: 0, name: "Constant 1"}]);
-  const [predicates, setPredicates] = React.useState<Predicate[]>([{name: "Predicate 1", data: {}, negated: false}]);
-  const [functions, setFunctions] = React.useState<Function[]>([{name: "Function 1", data: "// Code for Function 1"}]);
+
+  const [predicates, setPredicates] = React.useState<Predicate[]>([
+    {
+      name: "God",
+      data: {
+        paramCount: 1,
+        truthTable: {
+          "Zeus": true,
+          "Hera": true,
+          "Apollo": true,
+          "Athena": true
+        }
+      },
+      negated: false
+    },
+    {
+      name: "Human",
+      data: {
+        paramCount: 1,
+        truthTable: {
+          "Zeus": false,
+          "Hera": false,
+          "Apollo": false,
+          "Athena": false
+        }
+      },
+      negated: false
+    },
+    {
+      name: "Parent",
+      data: {
+        paramCount: 2,
+        truthTable: {
+          "Zeus,Apollo": true,
+          "Hera,Apollo": true,
+          "Zeus,Athena": true
+        }
+      },
+      negated: false
+    }
+  ]);
+
+  const [functions, setFunctions] = React.useState<Function[]>([
+    {
+      name: "spouse",
+      data: "def spouse(x):\n    if x == \"Zeus\":\n        return \"Hera\"\n    elif x == \"Hera\":\n        return \"Zeus\"\n    else:\n        return None"
+    }
+  ]);
+
+  const [constraints, setConstraints] = React.useState<Constraint[]>([
+    {
+      // True: Zeus is a god
+      code: "God(Zeus)",
+      enabled: true
+    },
+    {
+      // False: Apollo is a parent of Zeus (reverse of actual relationship)
+      code: "Parent(Apollo, Zeus)",
+      enabled: true
+    },
+    {
+      // False: Hera is human (contradicts our truth table)
+      code: "Human(Hera)",
+      enabled: true
+    },
+    {
+      // False: Zeus's spouse (Hera) is human
+      code: "Human(spouse(Zeus))",
+      enabled: true
+    },
+    {
+      // False: All gods are human (direct contradiction)
+      code: "forall(x) God(x) -> Human(x)",
+      enabled: true
+    }
+  ]);
 
   return (
     <ConstraintsContext.Provider value={{ constraints, setConstraints }}>
