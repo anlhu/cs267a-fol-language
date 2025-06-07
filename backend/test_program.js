@@ -60,8 +60,6 @@ const testRules = [
 // Generate the complete program
 const program = generateProgram(testContext, testRules);
 
-// Save to a file so we can run it
-import fs from 'fs';
-fs.writeFileSync('generated_program.py', program);
-
-console.log("Generated program saved to generated_program.py"); 
+// Just log the program instead of writing to a file
+console.log("Generated program:");
+console.log(program); 

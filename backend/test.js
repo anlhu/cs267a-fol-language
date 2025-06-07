@@ -29,5 +29,4 @@ const rules = [
 
 const program = generateProgram(context, rules);
 console.log("Generated Python Program:");
-console.log("------------------------");
 console.log(program); 

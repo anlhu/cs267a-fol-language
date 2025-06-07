@@ -108,6 +108,7 @@ app.post('/transpile', (req, res) => {
 
 app.post('/evaluate', (req, res) => {
   const { constraints, constants, predicates, functions } = req.body;
+  const tempFile = 'temp_program.py';
   
   try {
     // Generate Python program
@@ -117,20 +118,41 @@ app.post('/evaluate', (req, res) => {
     );
     
     // Save to a temporary file
-    const tempFile = 'temp_program.py';
     writeFileSync(tempFile, program);
     
-    // Execute the program and capture output
-    const output = execSync(`python3 ${tempFile}`).toString();
-    
-    // Clean up
-    unlinkSync(tempFile);
-    
-    // Parse the Python output back to JSON
-    const results = JSON.parse(output);
-    res.json({ results });
+    try {
+      // Execute the program and capture output
+      const output = execSync(`python3 ${tempFile}`, { 
+        encoding: 'utf8',
+        stdio: ['pipe', 'pipe', 'pipe'] // Capture both stdout and stderr
+      });
+      
+      // Parse the Python output back to JSON
+      const results = JSON.parse(output);
+      res.json({ results });
+    } catch (execError) {
+      // Handle Python execution errors
+      res.status(400).json({ 
+        error: `Python execution error: ${execError.stderr || execError.message}`
+      });
+    } finally {
+      // Always clean up the temp file
+      try {
+        unlinkSync(tempFile);
+      } catch (cleanupError) {
+        console.error('Failed to cleanup temp file:', cleanupError);
+      }
+    }
   } catch (error) {
+    // Handle other errors (e.g. program generation, file writing)
     res.status(400).json({ error: error.message });
+    
+    // Try to clean up if the file exists
+    try {
+      unlinkSync(tempFile);
+    } catch (cleanupError) {
+      // Ignore cleanup errors at this point
+    }
   }
 });
 

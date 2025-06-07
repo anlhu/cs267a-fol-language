@@ -9,7 +9,7 @@ import {
 } from "./context";
 
 export function AppToolbar() {
-  const { constraints } = useConstraints();
+  const { constraints, setConstraints } = useConstraints();
   const { constants } = useConstants();
   const { predicates } = usePredicates();
   const { functions } = useFunctions();
@@ -22,6 +22,12 @@ export function AppToolbar() {
         enabled: card.enabled,
       }));
 
+    // Don't make API call if there are no enabled constraints
+    if (decoded_enabled_constraints.length === 0) {
+      console.log('No enabled constraints to evaluate');
+      return;
+    }
+
     const payload = {
       constraints: decoded_enabled_constraints,
       constants,
@@ -31,10 +37,37 @@ export function AppToolbar() {
 
     try {
       console.log("Sending payload:", payload);
-      // Optionally handle response
+      const response = await fetch('http://localhost:8080/evaluate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to evaluate FOL rules');
+      }
+
+      const { results } = await response.json();
+      console.log('Evaluation results:', results);
+      
+      // Update constraints with evaluation results
+      const updatedConstraints = constraints.map((constraint, index) => {
+        if (!constraint.enabled) return constraint;
+        const result = results[`Rule ${index + 1}`];
+        return {
+          ...constraint,
+          satisfied: result?.satisfied ?? true,
+          error: result?.error
+        };
+      });
+      
+      setConstraints(updatedConstraints);
     } catch (error) {
-      // Optionally handle error
-      console.error(error);
+      console.error('Error evaluating FOL rules:', error);
+      // TODO: Show error in UI
     }
   };
 
