@@ -15,6 +15,8 @@ export function AppToolbar() {
   const { functions } = useFunctions();
 
   const handleRun = async () => {
+    console.log("Current constraints:", constraints);
+    
     const decoded_enabled_constraints = constraints
       .filter((card) => card.enabled)
       .map((card) => ({
@@ -57,13 +59,20 @@ export function AppToolbar() {
       const updatedConstraints = constraints.map((constraint, index) => {
         if (!constraint.enabled) return constraint;
         const result = results[`Rule ${index + 1}`];
-        return {
+        const updated = {
           ...constraint,
           satisfied: result?.satisfied ?? true,
           error: result?.error
         };
+        console.log(`Constraint ${index + 1}:`, { 
+          before: constraint,
+          after: updated,
+          result
+        });
+        return updated;
       });
       
+      console.log("Setting updated constraints:", updatedConstraints);
       setConstraints(updatedConstraints);
     } catch (error) {
       console.error('Error evaluating FOL rules:', error);

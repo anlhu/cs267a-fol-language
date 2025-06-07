@@ -42,6 +42,7 @@ export function ConstraintList() {
           onToggle={() => handleToggle(index)}
           onDelete={() => handleDelete(index)}
           onCodeChange={(value) => handleCodeChange(index, value)}
+          index={index}
         />
       ))}
       <Card style={{ width: "96%" }}>
