@@ -1,13 +1,12 @@
-const express = require('express');
-const antlr4  = require('antlr4');                    
+import express from 'express';
+import antlr4 from 'antlr4';
 const { InputStream, CommonTokenStream } = antlr4;
 
+import folLexer from './lang/js/folLexer.js';
+import folParser from './lang/js/folParser.js';
+import transpileVisitor from './lang/js/transpileVisitor.js';
 
-const folLexer = require('./lang/js/folLexer.js').default;
-const folParser = require('./lang/js/folParser.js').default;
-const transpileVisitor = require('./lang/js/transpileVisitor.js').default;
-
-const app  = express();
+const app = express();
 const port = 8080;
 
 app.use(express.json());
@@ -36,7 +35,7 @@ function isParsable(text) {
   return counter.count == 0;
 }
 
-function transpile(text) {
+export function transpile(text) {
   const chars  = new InputStream(text);
   const lexer  = new folLexer(chars);
   const tokens = new CommonTokenStream(lexer);

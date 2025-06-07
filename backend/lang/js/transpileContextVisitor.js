@@ -51,10 +51,13 @@ export default class TranspileContextVisitor {
         for (const func of context.functions) {
             const { name, data } = func;
             code += `# Function: ${name}\n`;
-            // Remove any leading indentation from the function code
-            const lines = data.split('\n').map(line => line.trim());
-            const funcCode = lines.join('\n');
-            code += funcCode + "\n\n";
+            // Properly indent the function code
+            const lines = data.split('\n');
+            const funcLines = lines.map((line, i) => {
+                if (i === 0) return line;  // First line (def statement) stays as is
+                return '    ' + line.trimStart();  // Indent other lines with 4 spaces
+            });
+            code += funcLines.join('\n') + "\n\n";
         }
 
         return code;
