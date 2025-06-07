@@ -31,12 +31,17 @@ export default class TranspileContextVisitor {
             // Convert JavaScript truthTable to Python format (true -> True)
             const truthTable = {};
             for (const [key, value] of Object.entries(data.truthTable || {})) {
-                truthTable[key] = value ? "True" : "False";
+                truthTable[key] = value.toString();
             }
             
             code += `def ${name}(*args):\n`;
             code += `    # Truth table for ${name}\n`;
-            code += `    truth_table = ${JSON.stringify(truthTable)}\n`;
+            code += `    truth_table = {\n`;
+            // Write each entry with proper Python boolean values
+            for (const [key, value] of Object.entries(data.truthTable || {})) {
+                code += `        "${key}": ${value ? 'True' : 'False'},\n`;
+            }
+            code += `    }\n`;
             code += `    key = ','.join(args)\n`;
             if (negated) {
                 code += `    return not truth_table.get(key, False)\n`;

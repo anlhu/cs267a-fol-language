@@ -1,5 +1,12 @@
 import express from 'express';
 import antlr4 from 'antlr4';
+import cors from 'cors';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import { writeFileSync, unlinkSync } from 'fs';
+import { execSync } from 'child_process';
+import { generateProgram } from './lang/js/transpileProgram.js';
+
 const { InputStream, CommonTokenStream } = antlr4;
 
 import folLexer from './lang/js/folLexer.js';
@@ -9,7 +16,21 @@ import transpileVisitor from './lang/js/transpileVisitor.js';
 const app = express();
 const port = 8080;
 
+// Configure CORS
+const corsOptions = {
+  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],  // Frontend URLs
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+// Enable CORS with options
+app.use(cors(corsOptions));
 app.use(express.json());
+
+// Handle pre-flight requests
+app.options('*', cors(corsOptions));
 
 /* ---------- helper ---------- */
 function isParsable(text) {
@@ -85,11 +106,45 @@ app.post('/transpile', (req, res) => {
   }
 });
 
+app.post('/evaluate', (req, res) => {
+  const { constraints, constants, predicates, functions } = req.body;
+  
+  try {
+    // Generate Python program
+    const program = generateProgram(
+      { constants, predicates, functions },  // context
+      constraints  // rules
+    );
+    
+    // Save to a temporary file
+    const tempFile = 'temp_program.py';
+    writeFileSync(tempFile, program);
+    
+    // Execute the program and capture output
+    const output = execSync(`python3 ${tempFile}`).toString();
+    
+    // Clean up
+    unlinkSync(tempFile);
+    
+    // Parse the Python output back to JSON
+    const results = JSON.parse(output);
+    res.json({ results });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // app.get('/', (req, res) => {
 //   console.log(transpile("Human(Socrates) -> forall(x) exists(y) Father(y, x)"));
 // })
 
-
-app.listen(port, () =>
-  console.log(`Parser API running at http://localhost:${port}`)
-);
+// Start server with error handling
+const server = app.listen(port, () => {
+  console.log(`Parser API running at http://localhost:${port}`);
+}).on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.log(`Port ${port} is already in use. The server is probably already running.`);
+  } else {
+    console.error('Failed to start server:', err);
+  }
+});

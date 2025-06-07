@@ -41,13 +41,16 @@ def iff(x, y):
     const evalCode = `
 # Evaluate all rules
 def evaluate_rules():
+    import json
     results = {}
     ${rules
         .filter(rule => rule.enabled)
         .map((rule, index) => `
     try:
+        # Convert Python bool to JSON bool
+        result = bool(con_${index}())
         results["Rule ${index + 1}"] = {
-            "satisfied": con_${index}(),
+            "satisfied": result,
             "rule": """${rule.code}"""
         }
     except Exception as e:
@@ -58,9 +61,10 @@ def evaluate_rules():
         .join('\n')}
     return results
 
-# Run evaluation and print results
+# Run evaluation and print results as JSON
 if __name__ == "__main__":
-    print(evaluate_rules())
+    import json
+    print(json.dumps(evaluate_rules()))
 `;
 
     // 5. Combine all parts and ensure proper indentation
