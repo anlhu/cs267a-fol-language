@@ -20,9 +20,41 @@ def implies(x, y):
 
 def iff(x, y):
     return (x and y) or (not x and not y)
+
+# Global evaluation tracker
+evaluation_tracker = []
+
+def track_evaluation(predicate_name, args, result):
+    evaluation_tracker.append({
+        'predicate': predicate_name,
+        'args': args,
+        'value': result
+    })
+    return result
 `;
 
-    // 3. Transpile each enabled rule
+    // 3. Modify predicate functions to track evaluations
+    const predicateCode = context.predicates.map(pred => {
+        const { name, data, negated } = pred;
+        // Convert JavaScript truthTable to Python format
+        const truthTable = {};
+        for (const [key, value] of Object.entries(data.truthTable || {})) {
+            truthTable[key] = value.toString();
+        }
+        
+        return `def ${name}(*args):
+    # Truth table for ${name}
+    truth_table = {
+${Object.entries(data.truthTable || {}).map(([key, value]) => 
+        `        "${key}": ${value ? 'True' : 'False'}`).join(',\n')}
+    }
+    key = ','.join(args)
+    result = ${negated ? 'not ' : ''}truth_table.get(key, False)
+    return track_evaluation("${name}", args, result)
+`;
+    }).join('\n\n');
+
+    // 4. Transpile each enabled rule
     const ruleCode = rules
         .filter(rule => rule.enabled)
         .map((rule, index) => {
@@ -37,21 +69,26 @@ def iff(x, y):
         })
         .join('\n\n');
 
-    // 4. Generate main evaluation code
+    // 5. Generate main evaluation code
     const evalCode = `
 # Evaluate all rules
 def evaluate_rules():
     import json
+    global evaluation_tracker
     results = {}
     ${rules
         .filter(rule => rule.enabled)
         .map((rule, index) => `
     try:
+        # Reset tracker for this rule
+        evaluation_tracker = []
+        
         # Convert Python bool to JSON bool
         result = bool(con_${index}())
         results["Rule ${index + 1}"] = {
             "satisfied": result,
-            "rule": """${rule.code}"""
+            "rule": """${rule.code}""",
+            "evaluations": evaluation_tracker
         }
     except Exception as e:
         results["Rule ${index + 1}"] = {
@@ -67,8 +104,8 @@ if __name__ == "__main__":
     print(json.dumps(evaluate_rules()))
 `;
 
-    // 5. Combine all parts and ensure proper indentation
-    const pythonCode = `${contextCode}\n${helperCode}\n${ruleCode}\n${evalCode}`;
+    // 6. Combine all parts and ensure proper indentation
+    const pythonCode = `${contextCode}\n${helperCode}\n${predicateCode}\n${ruleCode}\n${evalCode}`;
     
     // Fix any indentation issues by ensuring each line in function bodies is properly indented
     return pythonCode.split('\n').map(line => {

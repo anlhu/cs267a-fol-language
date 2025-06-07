@@ -62,7 +62,8 @@ export function AppToolbar() {
         const updated = {
           ...constraint,
           satisfied: result?.satisfied ?? true,
-          error: result?.error
+          error: result?.error,
+          evaluations: result?.evaluations
         };
         console.log(`Constraint ${index + 1}:`, { 
           before: constraint,

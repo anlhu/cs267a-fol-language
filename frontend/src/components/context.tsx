@@ -1,11 +1,19 @@
 import React, { createContext, useContext } from "react";
 
+type Evaluation = {
+  predicate: string;
+  args: string[];
+  value: boolean;
+};
+
 type Constraint = {
   code: string;
   enabled: boolean;
   satisfied?: boolean;
   error?: string;
+  evaluations?: Evaluation[];
 };
+
 type Constant = {
   id: number;
   name: string;

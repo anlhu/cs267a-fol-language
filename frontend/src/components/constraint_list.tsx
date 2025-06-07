@@ -43,6 +43,7 @@ export function ConstraintList() {
           onDelete={() => handleDelete(index)}
           onCodeChange={(value) => handleCodeChange(index, value)}
           index={index}
+          evaluations={constraint.evaluations}
         />
       ))}
       <Card style={{ width: "96%" }}>

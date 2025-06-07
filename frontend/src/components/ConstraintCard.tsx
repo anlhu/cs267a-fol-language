@@ -1,11 +1,17 @@
-import { Card, CardContent, Switch, Typography, IconButton } from "@mui/material";
+import { Card, CardContent, Switch, Typography, IconButton, Collapse } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorIcon from "@mui/icons-material/Error";
 import { green, red } from "@mui/material/colors";
 import MonacoEditor from "@monaco-editor/react";
 import { Box } from "@mui/material";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+
+type Evaluation = {
+  predicate: string;
+  args: string[];
+  value: boolean;
+};
 
 type ConstraintCardProps = {
   code: string;
@@ -16,6 +22,7 @@ type ConstraintCardProps = {
   onDelete: () => void;
   onCodeChange?: (value: string | undefined) => void;
   index: number;
+  evaluations?: Evaluation[];
 };
 
 export function ConstraintCard({
@@ -27,8 +34,10 @@ export function ConstraintCard({
   onDelete,
   onCodeChange,
   index,
+  evaluations,
 }: ConstraintCardProps) {
-  // Debug prop changes
+  const [showEvaluations, setShowEvaluations] = useState(false);
+
   useEffect(() => {
     console.log("ConstraintCard props updated:", {
       code,
@@ -36,9 +45,10 @@ export function ConstraintCard({
       satisfied,
       error,
       shouldShowBorder: enabled && satisfied !== undefined,
-      borderColor: satisfied ? green[500] : red[500]
+      borderColor: satisfied ? green[500] : red[500],
+      evaluations
     });
-  }, [code, enabled, satisfied, error]);
+  }, [code, enabled, satisfied, error, evaluations]);
 
   return (
     <Card 
@@ -68,7 +78,10 @@ export function ConstraintCard({
             {enabled && satisfied !== undefined && (
               satisfied ? 
                 <CheckCircleIcon sx={{ color: green[500] }} /> :
-                <ErrorIcon sx={{ color: red[500] }} />
+                <ErrorIcon 
+                  sx={{ color: red[500], cursor: 'pointer' }} 
+                  onClick={() => setShowEvaluations(!showEvaluations)}
+                />
             )}
             <IconButton size="small" onClick={onDelete}>
               <DeleteIcon />
@@ -92,6 +105,33 @@ export function ConstraintCard({
           <Typography variant="body2" color="error" sx={{ mt: 1 }}>
             Error: {error}
           </Typography>
+        )}
+        {!satisfied && enabled && evaluations && evaluations.length > 0 && (
+          <Collapse in={showEvaluations}>
+            <Box 
+              sx={{ 
+                mt: 1, 
+                p: 1, 
+                bgcolor: '#f5f5f5', 
+                borderRadius: 1,
+                border: '1px solid #ddd'
+              }}
+            >
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>Predicate Evaluations:</Typography>
+              {evaluations.map((evaluation, i) => (
+                <Typography 
+                  key={i} 
+                  variant="body2" 
+                  sx={{ 
+                    color: evaluation.value ? green[700] : red[700],
+                    fontFamily: 'monospace'
+                  }}
+                >
+                  {evaluation.predicate}({evaluation.args.join(', ')}) = {evaluation.value.toString()}
+                </Typography>
+              ))}
+            </Box>
+          </Collapse>
         )}
       </CardContent>
     </Card>
