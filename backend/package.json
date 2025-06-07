@@ -8,8 +8,9 @@
   "author": "",
   "license": "ISC",
   "description": "",
+  "type": "module",
   "dependencies": {
-    "antlr4": "^4.13.2",
-    "express": "^5.1.0"
+    "antlr4": "^4.13.1-patch-1",
+    "express": "^4.18.2"
   }
 }
