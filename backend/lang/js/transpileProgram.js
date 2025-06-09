@@ -1,6 +1,20 @@
 import TranspileContextVisitor from './transpileContextVisitor.js';
 import { transpile } from '../../server.js';  // We'll need to export this from server.js
 
+export function filterSyntax(rules) {
+    const passed = [];
+    const failed = [];
+    rules.filter(rule => rule.enabled).forEach(rule => {
+        try {
+            transpile(rule.code);
+            passed.push(rule);
+        } catch (error) {
+            failed.push({...rule, error: error.message});
+        }
+    });
+    return [passed, failed];
+}
+
 /**
  * Combines context and rules into a complete Python program
  * @param {Object} context - Frontend context (constants, predicates, functions)
@@ -57,14 +71,14 @@ ${Object.entries(data.truthTable || {}).map(([key, value]) =>
     // 4. Transpile each enabled rule
     const ruleCode = rules
         .filter(rule => rule.enabled)
-        .map((rule, index) => {
+        .map((rule) => {
             const transpiled = transpile(rule.code);
             // Extract just the constraint function, skip the helper functions
             const lines = transpiled.split('\n');
             const constraintFunc = lines
                 .slice(lines.findIndex(line => line.startsWith('def con_')))
                 .join('\n')
-                .replace('con_0', `con_${index}`);  // Replace con_0 with the correct index
+                .replace('con_0', `con_${rule.number}`);  // Replace con_0 with the correct index
             return constraintFunc;
         })
         .join('\n\n');
@@ -78,20 +92,20 @@ def evaluate_rules():
     results = {}
     ${rules
         .filter(rule => rule.enabled)
-        .map((rule, index) => `
+        .map((rule) => `
     try:
         # Reset tracker for this rule
         evaluation_tracker = []
         
         # Convert Python bool to JSON bool
-        result = bool(con_${index}())
-        results["Rule ${index + 1}"] = {
+        result = bool(con_${rule.number}())
+        results["Rule ${rule.number}"] = {
             "satisfied": result,
             "rule": """${rule.code}""",
             "evaluations": evaluation_tracker
         }
     except Exception as e:
-        results["Rule ${index + 1}"] = {
+        results["Rule ${rule.number}"] = {
             "error": str(e),
             "rule": """${rule.code}"""
         }`)
