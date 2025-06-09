@@ -15,6 +15,7 @@ import {
   TableRow,
   Typography,
   Paper,
+  TableContainer,
 } from "@mui/material";
 import { useConstants } from "./context";
 import { useEffect, useState } from "react";
@@ -133,60 +134,62 @@ export function TruthTable({
         />
       </Box>
       <Paper variant="outlined">
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              {[...Array(paramCount)].map((_, i) => (
-                <TableCell key={i}>{`Arg${i + 1}`}</TableCell>
-              ))}
-              <TableCell align="right">Value</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {tuples
-              .filter((tuple) => {
-                const key = tuple.map((c: any) => c.name).join(",");
-                const val = !!truthTable[key];
-                if (filter === "all") return true;
-                if (filter === "true") return val;
-                if (filter === "false") return !val;
-                return true;
-              })
-              .map((tuple, idx) => {
-                const key = tuple.map((c: any) => c.name).join(",");
-                let val = !!truthTable[key];
-                if (negated) val = !val;
-                return (
-                  <TableRow key={key}>
-                    {tuple.map((c: any, i: number) => (
-                      <TableCell key={i}>{c.name}</TableCell>
-                    ))}
-                    <TableCell align="right">
-                      <Box
-                        component="span"
-                        sx={{
-                          display: "inline-block",
-                          width: 32,
-                          height: 32,
-                          bgcolor: val ? "#4caf50" : "#f44336",
-                          color: "#fff",
-                          borderRadius: "50%",
-                          textAlign: "center",
-                          lineHeight: "32px",
-                          cursor: "pointer",
-                          userSelect: "none",
-                          fontWeight: "bold",
-                        }}
-                        onClick={() => handleToggle(key)}
-                      >
-                        {val ? "T" : "F"}
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-          </TableBody>
-        </Table>
+        <TableContainer style={{ maxHeight: 400 }}>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                {[...Array(paramCount)].map((_, i) => (
+                  <TableCell key={i}>{`Arg${i + 1}`}</TableCell>
+                ))}
+                <TableCell align="right">Value</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {tuples
+                .filter((tuple) => {
+                  const key = tuple.map((c: any) => c.name).join(",");
+                  const val = !!truthTable[key];
+                  if (filter === "all") return true;
+                  if (filter === "true") return val;
+                  if (filter === "false") return !val;
+                  return true;
+                })
+                .map((tuple, idx) => {
+                  const key = tuple.map((c: any) => c.name).join(",");
+                  let val = !!truthTable[key];
+                  if (negated) val = !val;
+                  return (
+                    <TableRow key={key}>
+                      {tuple.map((c: any, i: number) => (
+                        <TableCell key={i}>{c.name}</TableCell>
+                      ))}
+                      <TableCell align="right">
+                        <Box
+                          component="span"
+                          sx={{
+                            display: "inline-block",
+                            width: 32,
+                            height: 32,
+                            bgcolor: val ? "#4caf50" : "#f44336",
+                            color: "#fff",
+                            borderRadius: "50%",
+                            textAlign: "center",
+                            lineHeight: "32px",
+                            cursor: "pointer",
+                            userSelect: "none",
+                            fontWeight: "bold",
+                          }}
+                          onClick={() => handleToggle(key)}
+                        >
+                          {val ? "T" : "F"}
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+            </TableBody>
+          </Table>
+        </TableContainer>
         {constants.length === 0 && (
           <Typography color="text.secondary" mt={2} align="center">
             Add constants to define the truth table.
