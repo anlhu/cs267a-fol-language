@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { writeFileSync, unlinkSync } from 'fs';
 import { execSync } from 'child_process';
-import { generateProgram } from './lang/js/transpileProgram.js';
+import { filterSyntax, generateProgram } from './lang/js/transpileProgram.js';
 
 const { InputStream, CommonTokenStream } = antlr4;
 
@@ -111,10 +111,13 @@ app.post('/evaluate', (req, res) => {
   const tempFile = 'temp_program.py';
   
   try {
+    // filter the syntactically correct constraints
+    let [passedConstraints, failedConstraints] = filterSyntax(constraints);
+
     // Generate Python program
     const program = generateProgram(
       { constants, predicates, functions },  // context
-      constraints  // rules
+      passedConstraints  // rules
     );
     
     // Save to a temporary file
@@ -129,6 +132,12 @@ app.post('/evaluate', (req, res) => {
       
       // Parse the Python output back to JSON
       const results = JSON.parse(output);
+
+      // Add failed constraints to results
+      failedConstraints.forEach((rule) => {
+        results[`Rule ${rule.number}`] = { satisfied: false, rule: rule.code, error: rule.error || 'Syntax error' };
+      });
+      
       res.json({ results });
     } catch (execError) {
       // Handle Python execution errors

@@ -17,7 +17,7 @@ import {
   Paper,
   TableContainer,
 } from "@mui/material";
-import { useConstants } from "./context";
+import { useConstants, usePredicates } from "./context";
 import { useEffect, useState } from "react";
 
 export function TruthTable({
@@ -74,7 +74,7 @@ export function TruthTable({
     );
     setNegated(!!selectedItem.negated);
     setTruthTable(selectedItem.data.truthTable || {});
-  }, [selectedIndex]);
+  }, [selectedIndex, selectedItem, data]);
 
   // Generate all combinations of constants for paramCount
   function getTuples(arr: any[], k: number): any[][] {

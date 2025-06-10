@@ -16,17 +16,18 @@ export function AppToolbar() {
 
   const handleRun = async () => {
     console.log("Current constraints:", constraints);
-    
+
     const decoded_enabled_constraints = constraints
       .filter((card) => card.enabled)
-      .map((card) => ({
+      .map((card, index) => ({
+        number: index + 1,
         code: card.code,
         enabled: card.enabled,
       }));
 
     // Don't make API call if there are no enabled constraints
     if (decoded_enabled_constraints.length === 0) {
-      console.log('No enabled constraints to evaluate');
+      console.log("No enabled constraints to evaluate");
       return;
     }
 
@@ -39,44 +40,44 @@ export function AppToolbar() {
 
     try {
       console.log("Sending payload:", payload);
-      const response = await fetch('http://localhost:8080/evaluate', {
-        method: 'POST',
+      const response = await fetch("http://localhost:8080/evaluate", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to evaluate FOL rules');
+        throw new Error(error.error || "Failed to evaluate FOL rules");
       }
 
       const { results } = await response.json();
-      console.log('Evaluation results:', results);
-      
+      console.log("Evaluation results:", results);
+
       // Update constraints with evaluation results
       const updatedConstraints = constraints.map((constraint, index) => {
         if (!constraint.enabled) return constraint;
         const result = results[`Rule ${index + 1}`];
         const updated = {
           ...constraint,
-          satisfied: result?.satisfied ?? true,
+          satisfied: result?.satisfied ?? false,
           error: result?.error,
-          evaluations: result?.evaluations
+          evaluations: result?.evaluations,
         };
-        console.log(`Constraint ${index + 1}:`, { 
+        console.log(`Constraint ${index + 1}:`, {
           before: constraint,
           after: updated,
-          result
+          result,
         });
         return updated;
       });
-      
+
       console.log("Setting updated constraints:", updatedConstraints);
       setConstraints(updatedConstraints);
     } catch (error) {
-      console.error('Error evaluating FOL rules:', error);
+      console.error("Error evaluating FOL rules:", error);
       // TODO: Show error in UI
     }
   };
