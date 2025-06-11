@@ -1,4 +1,4 @@
-import TranspileContextVisitor from './transpileContextVisitor.js';
+import ExplainContextVisitor from './explainContextVisitor.js';
 import { transpile } from '../../server.js';  // We'll need to export this from server.js
 
 export function filterSyntax(rules) {
@@ -23,7 +23,7 @@ export function filterSyntax(rules) {
  */
 export function generateProgram(context, rules) {
     // 1. Generate context code
-    const contextVisitor = new TranspileContextVisitor();
+    const contextVisitor = new ExplainContextVisitor();
     const contextCode = contextVisitor.generatePython(context);
 
     // 2. Generate helper functions needed by transpiled rules
