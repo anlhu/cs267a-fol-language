@@ -14,50 +14,72 @@
  *   functions: [{ name: string, data: string }]
  * }
  */
-
-function getCombinations(arr, k) {
-    if (k === 0) return [[]];
-    if (arr.length === 0) return [];
-    const [first, ...rest] = arr;
-    const withFirst = getCombinations(rest, k - 1).map(comb => [first, ...comb]);
-    const withoutFirst = getCombinations(rest, k);
-    return withFirst.concat(withoutFirst);
-}
-
 export default class ExplainContextVisitor {
     generatePython(context) {
+        // constants
         const constantNames = context.constants.map(c => c.name);
+        const constantsCodes = [];
+        for (const constant of constantNames) {
+            constantsCodes.push(`${constant} = symbols('${constant}')`);
+        }
+        const constantsCodeJoined = constantsCodes.join('\n');
 
+        // predicates
         const predicatesCodes = [];
         for (const pred of context.predicates) {
             const { name, data, negated } = pred;
-            const {paramCount, truthTable} = data;
-
-            const namesListUnderscore = [];
-            const namesListParens = [];
-            const constNameCombos = getCombinations(constantNames, paramCount);
-            for (const combo of constNameCombos) {
-                namesListUnderscore.push([name, ...combo].join('_'));
-                namesListParens.push(`${name}(${combo.join(', ')})`);
-            }
-
-            const commaList = namesListUnderscore.join(', ');
-            const spaceList = namesListParens.join(' ');
-            predicatesCodes.push(`${commaList} = symbols('${spaceList}')`);
+            // predicatesCodes.push(`${name} = predicate('${name}')`);
+            predicatesCodes.push(`class ${name}(BooleanFunction): pass`);
         }
-        predicatesCodes = predicatesCodes.join('\n');
+        const predicatesCodeJoined = predicatesCodes.join('\n');
 
+        // functions
         // Wont be able to handle functions in SymPy, it would be infeasible to build something from scratch.
+        // const functionsCodes = [];
+        // for (const func of context.functions) {
+        //     const { name, data } = func;
+        //     functionsCodes.push(`${name} = predicate('${name}')`);
+        // }
+        // const functionsCodesJoined = functionsCodes.join('\n');
+        // Generate functions
+        let functionCode = "";
+        for (const func of context.functions) {
+            const { name, data } = func;
+            functionCode += data + "\n\n";
+        }
+
+        // quantified variables
+        const quantifiedVariables = context.quantifiedVariables || [];
+        const quantifiedVariablesCodes = [];
+        for (const variable of quantifiedVariables) {
+            quantifiedVariablesCodes.push(`${variable} = symbols('${variable}')`);
+        }
+        const quantifiedVariablesCodeJoined = quantifiedVariablesCodes.join('\n');
 
         let code = `
 # Generated Python Context
 
-from sympy import symbols
-from sympy.logic.boolalg import And, Or, Not, Implies, simplify_logic
+from sympy import symbols, Function, Symbol
+from sympy.logic.boolalg import And, Or, Not, Implies, simplify_logic, BooleanFunction, true, false, to_dnf
+
+# Constants
+${constantsCodeJoined}
+constants = [${constantNames.join(', ')}]
 
 # Predicates
-${predicatesCodes}
+def predicate(name):
+    def p(*args):
+        ret = Symbol(f"{name}({','.join(str(arg) for arg in args)})")
+        return ret
 
+    return p
+${predicatesCodeJoined}
+
+# Functions
+${functionCode}
+
+# Quantified Variables
+${quantifiedVariablesCodeJoined}
 `;
 
         return code;

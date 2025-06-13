@@ -6,12 +6,14 @@ import { dirname } from 'path';
 import { writeFileSync, unlinkSync } from 'fs';
 import { execSync } from 'child_process';
 import { filterSyntax, generateProgram } from './lang/js/transpileProgram.js';
+import { filterSyntaxExplainer, generateExplainerProgram } from './lang/js/explainTranspiler.js';
 
 const { InputStream, CommonTokenStream } = antlr4;
 
 import folLexer from './lang/js/folLexer.js';
 import folParser from './lang/js/folParser.js';
 import transpileVisitor from './lang/js/transpileVisitor.js';
+import ExplainVisitor from './lang/js/explainVisitor.js';
 
 const app = express();
 const port = 8080;
@@ -81,6 +83,32 @@ export function transpile(text) {
   return result;
 }
 
+export function transpileExplainer(text) {
+  const chars  = new InputStream(text);
+  const lexer  = new folLexer(chars);
+  const tokens = new CommonTokenStream(lexer);
+  const parser = new folParser(tokens);
+
+  parser.removeErrorListeners();         
+  parser.addErrorListener({
+    syntaxError: (recognizer, offendingSymbol, line, column, msg, e) => {
+      throw new Error(`Syntax error at line ${line}:${column} – ${msg}`);
+    },
+    reportAmbiguity:            () => {},
+    reportAttemptingFullContext: () => {},
+    reportContextSensitivity:    () => {}
+  });
+
+  parser.buildParseTrees = true;
+  const tree = parser.condition();
+
+  const tv = new ExplainVisitor();
+  const result = tv.visit(tree);
+  const quantifiedVariables = Array.from(tv.quantifiedVariables);
+
+  return { result, quantifiedVariables };
+}
+
 // console.log(isParsable("forall(x) exists(y) Human(x) -> Father(y,x)"));
 
 /* ---------- API ---------- */
@@ -114,15 +142,22 @@ app.post('/evaluate', (req, res) => {
   try {
     // filter the syntactically correct constraints
     let [passedConstraints, failedConstraints] = filterSyntax(constraints);
+    let [passedExplainConstraints, failedExplainConstraints] = filterSyntaxExplainer(constraints);
 
     // Generate Python program
     const program = generateProgram(
       { constants, predicates, functions },  // context
       passedConstraints  // rules
     );
+
+    const program2 = generateExplainerProgram(
+      { constants, predicates, functions },  // context
+      passedExplainConstraints  // rules
+    );
     
     // Save to a temporary file
     writeFileSync(tempFile, program);
+    writeFileSync(tempFile2, program2);
     
     try {
       // Execute the program and capture output
@@ -133,6 +168,10 @@ app.post('/evaluate', (req, res) => {
       
       // Parse the Python output back to JSON
       const results = JSON.parse(output);
+
+      // get info from those that are not satisfied
+      // TODO
+
 
       // Add failed constraints to results
       failedConstraints.forEach((rule) => {

@@ -1,12 +1,12 @@
 import ExplainContextVisitor from './explainContextVisitor.js';
-import { transpile } from '../../server.js';  // We'll need to export this from server.js
+import { transpileExplainer } from '../../server.js';  // We'll need to export this from server.js
 
-export function filterSyntax(rules) {
+export function filterSyntaxExplainer(rules) {
     const passed = [];
     const failed = [];
     rules.filter(rule => rule.enabled).forEach(rule => {
         try {
-            transpile(rule.code);
+            transpileExplainer(rule.code);
             passed.push(rule);
         } catch (error) {
             failed.push({...rule, error: error.message});
@@ -15,94 +15,122 @@ export function filterSyntax(rules) {
     return [passed, failed];
 }
 
+function getCombinations(arr, k) {
+    if (k === 0) return [[]];
+    if (arr.length === 0) return [];
+    // Allow repeated elements (permutation with replacement)
+    const results = [];
+    function permute(path) {
+        if (path.length === k) {
+            results.push([...path]);
+            return;
+        }
+        for (let i = 0; i < arr.length; i++) {
+            path.push(arr[i]);
+            permute(path);
+            path.pop();
+        }
+    }
+    permute([]);
+    return results;
+}
+
 /**
  * Combines context and rules into a complete Python program
  * @param {Object} context - Frontend context (constants, predicates, functions)
  * @param {Array<{code: string, enabled: boolean}>} rules - Array of FOL rules
  * @returns {string} Complete Python program
  */
-export function generateProgram(context, rules) {
-    // 1. Generate context code
-    const contextVisitor = new ExplainContextVisitor();
-    const contextCode = contextVisitor.generatePython(context);
+export function generateExplainerProgram(context, rules) {
+    const constantNames = context.constants.map(c => c.name);
 
-    // 2. Generate helper functions needed by transpiled rules
-    const helperCode = `
-# Helper functions for rules
-def implies(x, y):
-    return not x or y
-
-def iff(x, y):
-    return (x and y) or (not x and not y)
-
-# Global evaluation tracker
-evaluation_tracker = []
-
-def track_evaluation(predicate_name, args, result):
-    evaluation_tracker.append({
-        'predicate': predicate_name,
-        'args': args,
-        'value': result
-    })
-    return result
-`;
-
-    // 3. Modify predicate functions to track evaluations
-    const predicateCode = context.predicates.map(pred => {
-        const { name, data, negated } = pred;
-        // Convert JavaScript truthTable to Python format
-        const truthTable = {};
-        for (const [key, value] of Object.entries(data.truthTable || {})) {
-            truthTable[key] = value.toString();
+    // 0. Extract the quantified variables
+    const quantifiedVariablesSet = new Set();
+    for (const rule of rules) {
+        const { quantifiedVariables } = transpileExplainer(rule.code);
+        if (quantifiedVariables) {
+            for (const v of quantifiedVariables) {
+                quantifiedVariablesSet.add(v);
+            }
         }
-        
-        return `def ${name}(*args):
-    # Truth table for ${name}
-    truth_table = {
-${Object.entries(data.truthTable || {}).map(([key, value]) => 
-        `        "${key}": ${value ? 'True' : 'False'}`).join(',\n')}
     }
-    key = ','.join(args)
-    result = ${negated ? 'not ' : ''}truth_table.get(key, False)
-    return track_evaluation("${name}", args, result)
-`;
-    }).join('\n\n');
+
+    // 1. Generate code for context (constants, predicates, functions, quantified variables)
+    const contextVisitor = new ExplainContextVisitor();
+    const contextCode = contextVisitor.generatePython({...context, quantifiedVariables: Array.from(quantifiedVariablesSet)});
+
+    // 2. Generate instance
+    const predicateInstantiations = [];
+    const instance = []
+    for (const pred of context.predicates) {
+        const { name, data, negated } = pred;
+        const {paramCount, truthTable} = data;
+
+        const constNameCombos = getCombinations(constantNames, paramCount);
+        for (const combo of constNameCombos) {
+            const commaList = combo.map(c => `${c}`).join(', ');
+            const unnegatedValue = truthTable[combo.join(',')] ?? false;
+            const actualValue = negated ? !unnegatedValue : unnegatedValue;
+            predicateInstantiations.push(`${name}(${commaList})`);
+            instance.push(`(Symbol("${name}(${commaList})"), ${actualValue})`);
+        }
+    }
+    const instanceCode = instance.length > 0 ? instance.join(',\n        ') : '[]';
+    const predicateSubs = predicateInstantiations.map(predFunc => `${predFunc} : Symbol("${predFunc}")`).join(', ');
 
     // 4. Transpile each enabled rule
     const ruleCode = rules
         .filter(rule => rule.enabled)
         .map((rule) => {
-            const transpiled = transpile(rule.code);
+            const {result, quantifiedVariables} = transpileExplainer(rule.code);
             // Extract just the constraint function, skip the helper functions
-            const lines = transpiled.split('\n');
+            const lines = result.split('\n');
             const constraintFunc = lines
                 .slice(lines.findIndex(line => line.startsWith('def con_')))
                 .join('\n')
                 .replace('con_0', `con_${rule.number}`);  // Replace con_0 with the correct index
-            return constraintFunc;
+            return `${constraintFunc}.subs({${predicateSubs}})`;
         })
         .join('\n\n');
 
-    // 5. Generate main evaluation code
-    const evalCode = `
-# Evaluate all rules
+    // 6. Combine all parts and ensure proper indentation
+    const pythonCode = `
+${contextCode}
+
+# Reasoning functions
+def complete_reason(rule, var, value):
+    if rule.has(var):
+        var_negated_if_needed = var if value else ~var
+        return rule.subs({var: value}) & (
+            var_negated_if_needed | (rule.subs({var: ~value}))
+        )
+    else:
+        return rule
+        
+def complete_reason_instance(rule):
+    instance = [
+        ${instanceCode}
+    ]
+    for var, setting in instance:
+        rule = complete_reason(rule, var, setting)
+    return to_dnf(rule, simplify=True)
+
+# Rule Code
+${ruleCode}
+
+# Evaluation
 def evaluate_rules():
     import json
-    global evaluation_tracker
     results = {}
     ${rules
         .filter(rule => rule.enabled)
         .map((rule) => `
     try:
-        # Reset tracker for this rule
-        evaluation_tracker = []
-        
         # Convert Python bool to JSON bool
-        result = bool(con_${rule.number}())
+        result = str(complete_reason_instance(con_${rule.number}))
         results["Rule ${rule.number}"] = {
-            "satisfied": result,
             "rule": """${rule.code}""",
-            "evaluations": evaluation_tracker
+            "result": result
         }
     except Exception as e:
         results["Rule ${rule.number}"] = {
@@ -117,9 +145,6 @@ if __name__ == "__main__":
     import json
     print(json.dumps(evaluate_rules()))
 `;
-
-    // 6. Combine all parts and ensure proper indentation
-    const pythonCode = `${contextCode}\n${helperCode}\n${predicateCode}\n${ruleCode}\n${evalCode}`;
     
     // Fix any indentation issues by ensuring each line in function bodies is properly indented
     return pythonCode.split('\n').map(line => {
