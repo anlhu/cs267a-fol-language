@@ -170,10 +170,16 @@ app.post('/evaluate', (req, res) => {
       const results = JSON.parse(output);
 
       // get info from those that are not satisfied
-      // TODO
+      const output2 = execSync(`python3 ${tempFile2}`, { 
+        encoding: 'utf8',
+        stdio: ['pipe', 'pipe', 'pipe'] // Capture both stdout and stderr
+      });
+      const results2 = JSON.parse(output2);
+      for (const item in results) {
+        results[item].explanation = results2[item].result;
+      }
 
-
-      // Add failed constraints to results
+      // Add syntax failed constraints to results
       failedConstraints.forEach((rule) => {
         results[`Rule ${rule.number}`] = { satisfied: false, rule: rule.code, error: rule.error || 'Syntax error' };
       });
@@ -188,6 +194,7 @@ app.post('/evaluate', (req, res) => {
       // Always clean up the temp file
       try {
         unlinkSync(tempFile);
+        unlinkSync(tempFile2);
       } catch (cleanupError) {
         console.error('Failed to cleanup temp file:', cleanupError);
       }
@@ -199,6 +206,7 @@ app.post('/evaluate', (req, res) => {
     // Try to clean up if the file exists
     try {
       unlinkSync(tempFile);
+      unlinkSync(tempFile2);
     } catch (cleanupError) {
       // Ignore cleanup errors at this point
     }

@@ -44,6 +44,7 @@ export function ConstraintList() {
           onCodeChange={(value) => handleCodeChange(index, value)}
           index={index}
           evaluations={constraint.evaluations}
+          explanation={constraint.explanation}
         />
       ))}
       <Card style={{ width: "96%" }}>

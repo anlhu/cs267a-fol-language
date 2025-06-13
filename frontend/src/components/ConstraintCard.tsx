@@ -32,6 +32,7 @@ type ConstraintCardProps = {
   onCodeChange?: (value: string | undefined) => void;
   index: number;
   evaluations?: Evaluation[];
+  explanation?: string;
 };
 
 export function ConstraintCard({
@@ -44,6 +45,7 @@ export function ConstraintCard({
   onCodeChange,
   index,
   evaluations,
+  explanation,
 }: ConstraintCardProps) {
   const [showEvaluations, setShowEvaluations] = useState(false);
   const { predicates, setPredicates } = usePredicates();
@@ -146,6 +148,20 @@ export function ConstraintCard({
         )}
         {!satisfied && enabled && evaluations && evaluations.length > 0 && (
           <Collapse in={showEvaluations}>
+            <Box
+              sx={{
+                mt: 1,
+                p: 1,
+                bgcolor: "#f5f5f5",
+                borderRadius: 1,
+                border: "1px solid #ddd",
+              }}
+            >
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                Complete Reason:
+              </Typography>
+              {explanation}
+            </Box>
             <Box
               sx={{
                 mt: 1,

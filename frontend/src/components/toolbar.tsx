@@ -65,6 +65,7 @@ export function AppToolbar() {
           satisfied: result?.satisfied ?? false,
           error: result?.error,
           evaluations: result?.evaluations,
+          explanation: result?.explanation,
         };
         console.log(`Constraint ${index + 1}:`, {
           before: constraint,

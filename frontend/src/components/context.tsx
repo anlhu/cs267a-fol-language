@@ -12,6 +12,7 @@ type Constraint = {
   satisfied?: boolean;
   error?: string;
   evaluations?: Evaluation[];
+  explanation?: string;
 };
 
 type Constant = {
