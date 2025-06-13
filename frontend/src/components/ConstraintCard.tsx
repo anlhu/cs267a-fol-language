@@ -158,7 +158,8 @@ export function ConstraintCard({
               }}
             >
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                Complete Reason:
+                Complete Reason (make this sentence false to satisfy the
+                constraint):
               </Typography>
               {explanation}
             </Box>
