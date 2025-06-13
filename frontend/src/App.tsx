@@ -6,13 +6,15 @@ import { AppProviders } from "./components/context";
 import { AppToolbar } from "./components/toolbar";
 import { ConstraintList } from "./components/constraint_list";
 import { Section } from "./components/section";
+import { GenerateData } from "./components/generate_data";
 
 function AppContent() {
   const [leftWidth, setLeftWidth] = useState(window.innerWidth / 2);
   const [sectionHeights, setSectionHeights] = useState([
-    100,
-    window.innerHeight / 3,
-    window.innerHeight / 3,
+    100,  // Generate Data
+    window.innerHeight / 4,  // Constants
+    window.innerHeight / 4,  // Predicates
+    window.innerHeight / 4,  // Functions
   ]);
 
   const handleResizeLeft = (
@@ -75,7 +77,11 @@ function AppContent() {
               height="100%"
               overflow="hidden"
             >
-              <Section idx={index} width={rightWidth} />
+              {index === 0 ? (
+                <GenerateData />
+              ) : (
+                <Section idx={index - 1} width={rightWidth} />
+              )}
             </Box>
           </Resizable>
         ))}
