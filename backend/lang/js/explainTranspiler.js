@@ -113,7 +113,7 @@ def complete_reason_instance(rule):
     ]
     for var, setting in instance:
         rule = complete_reason(rule, var, setting)
-    return to_dnf(rule, simplify=True)
+    return to_dnf(rule, simplify=True, force=True)
 
 # Rule Code
 ${ruleCode}
