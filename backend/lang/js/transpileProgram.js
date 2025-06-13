@@ -22,9 +22,22 @@ export function filterSyntax(rules) {
  * @returns {string} Complete Python program
  */
 export function generateProgram(context, rules) {
+    // Handle new constants generation
+    const numNewConstants = context.numNewConstants || 0;
+    const newConstants = Array.from({ length: numNewConstants }, (_, i) => ({
+        id: Date.now() + i,
+        name: `NewConstant${i + 1}`
+    }));
+    
+    // Add new constants to context
+    const extendedContext = {
+        ...context,
+        constants: [...(context.constants || []), ...newConstants]
+    };
+
     // 1. Generate context code
     const contextVisitor = new TranspileContextVisitor();
-    const contextCode = contextVisitor.generatePython(context);
+    const contextCode = contextVisitor.generatePython(extendedContext);
 
     // 2. Generate helper functions needed by transpiled rules
     const helperCode = `
@@ -48,7 +61,7 @@ def track_evaluation(predicate_name, args, result):
 `;
 
     // 3. Modify predicate functions to track evaluations
-    const predicateCode = context.predicates.map(pred => {
+    const predicateCode = extendedContext.predicates.map(pred => {
         const { name, data, negated } = pred;
         // Convert JavaScript truthTable to Python format
         const truthTable = {};

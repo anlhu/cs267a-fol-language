@@ -214,6 +214,41 @@ app.post('/evaluate', (req, res) => {
   }
 });
 
+app.post('/generate', (req, res) => {
+  const { constraints, constants, predicates, functions, numConstants } = req.body;
+  
+  try {
+    // Filter the syntactically correct constraints
+    let [passedConstraints, failedConstraints] = filterSyntax(constraints);
+
+    // Generate base Python program without evaluation
+    const program = generateProgram(
+      { 
+        constants, 
+        predicates, 
+        functions,
+        numNewConstants: numConstants  // Pass through to generator
+      },
+      passedConstraints
+    );
+    
+    // Return the generated program and any failed constraints
+    res.json({ 
+      program,
+      failedConstraints: failedConstraints.map(rule => ({
+        number: rule.number,
+        code: rule.code,
+        error: rule.error || 'Syntax error'
+      }))
+    });
+    
+  } catch (error) {
+    res.status(400).json({ 
+      error: `Failed to generate program: ${error.message}`
+    });
+  }
+});
+
 // app.get('/', (req, res) => {
 //   console.log(transpile("Human(Socrates) -> forall(x) exists(y) Father(y, x)"));
 // })
