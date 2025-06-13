@@ -327,7 +327,7 @@ export function Section({ idx, width }: { idx: number; width: number }) {
             <MonacoEditor
               height="200px"
               width="90%"
-              defaultLanguage="javascript"
+              defaultLanguage="python"
               value={selectedItem?.data}
               onChange={handleEditorChange}
               options={{

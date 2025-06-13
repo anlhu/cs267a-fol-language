@@ -12,6 +12,7 @@ type Constraint = {
   satisfied?: boolean;
   error?: string;
   evaluations?: Evaluation[];
+  explanation?: string;
 };
 
 type Constant = {
@@ -132,6 +133,20 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       },
       negated: false,
     },
+    {
+      name: "Likes",
+      data: {
+        paramCount: 2,
+        truthTable: {
+          "Zeus,Zeus": true,
+          "Apollo,Apollo": true,
+          "Apollo,Athena": true,
+          "Athena,Apollo": true,
+          "Athena,Athena": true,
+        },
+      },
+      negated: false,
+    },
   ]);
 
   const [functions, setFunctions] = React.useState<Function[]>([
@@ -165,6 +180,11 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
     {
       // False: All gods are human (direct contradiction)
       code: "forall(x) God(x) -> Human(x)",
+      enabled: true,
+    },
+    {
+      // False: everyone likes someone (Hera doesn't like anyone)
+      code: "forall(x) exists(y) Likes(x, y)",
       enabled: true,
     },
   ]);
