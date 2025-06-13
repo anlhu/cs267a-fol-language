@@ -209,6 +209,7 @@ app.post('/evaluate', (req, res) => {
       unlinkSync(tempFile2);
     } catch (cleanupError) {
       // Ignore cleanup errors at this point
+      console.error('Failed to cleanup temp file:', cleanupError);
     }
   }
 });
