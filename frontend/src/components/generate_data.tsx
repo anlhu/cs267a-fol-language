@@ -9,10 +9,18 @@ import {
 } from "./context";
 import { Box } from "@mui/material";
 
+interface GenerateResponse {
+  success: boolean;
+  solution: {
+    new_constants: string[];
+    predicate_assignments: Record<string, boolean>;
+  };
+}
+
 export function GenerateData() {
   const { constraints } = useConstraints();
-  const { constants } = useConstants();
-  const { predicates } = usePredicates();
+  const { constants, setConstants } = useConstants();
+  const { predicates, setPredicates } = usePredicates();
   const { functions } = useFunctions();
   const [numConstants, setNumConstants] = useState<number>(1);
 
@@ -56,10 +64,41 @@ export function GenerateData() {
         throw new Error(error.error || "Failed to generate data");
       }
 
-      const result = await response.json();
+      const result = await response.json() as GenerateResponse;
       console.log("Generation result:", result);
       
-      // TODO: Handle the generated data
+      // Handle the generated data
+      if (result.success && result.solution) {
+        // Add new constants
+        const newConstants = result.solution.new_constants.map((name: string, index: number) => ({
+          id: constants.length + index + 1,
+          name,
+        }));
+        setConstants([...constants, ...newConstants]);
+
+        // Update predicates with new assignments
+        const updatedPredicates = predicates.map(pred => {
+          const newTruthTable = { ...pred.data.truthTable };
+          
+          // Add new assignments from the solution
+          Object.entries(result.solution.predicate_assignments).forEach(([key, value]) => {
+            // Extract predicate name and arguments from the key (e.g., "God(Zeus)" -> ["God", "Zeus"])
+            const match = key.match(/^([^(]+)\((.*)\)$/);
+            if (match && match[1] === pred.name) {
+              newTruthTable[match[2]] = value;
+            }
+          });
+
+          return {
+            ...pred,
+            data: {
+              ...pred.data,
+              truthTable: newTruthTable,
+            },
+          };
+        });
+        setPredicates(updatedPredicates);
+      }
       
     } catch (error) {
       console.error("Error generating data:", error);
