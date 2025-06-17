@@ -18,7 +18,7 @@ RUN sudo -E bash nodesource_setup.sh
 RUN sudo apt-get install -y nodejs
 
 # install python libraries
-RUN pip install black antlr4-tools antlr4-python3-runtime
+RUN pip install black antlr4-tools antlr4-python3-runtime ortools
 
 # Useful shortcuts
 RUN echo 'alias kill3000="fuser -k -n tcp 3000"' >> /etc/bash.bashrc
