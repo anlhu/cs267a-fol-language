@@ -31,16 +31,9 @@ If you prefer to run locally without Docker:
    ```
 2. **Backend**:
    - Ensure Python 3.7+ is installed.
-   - (Optional) Create and activate a virtual environment:
-     ```bash
-     python3 -m venv venv
-     source venv/bin/activate
-     ```
    - Install dependencies:
      ```bash
-     pip install -r backend/requirements.txt
-     # Or if requirements.txt is not provided, install OR-Tools directly:
-     pip install ortools
+     pip install black antlr4-tools antlr4-python3-runtime ortools
      ```
 3. **Frontend**:
    - Ensure Node.js (v14+) and npm are installed.
@@ -54,13 +47,6 @@ If you prefer to run locally without Docker:
 
 The backend handles parsing FOL formulas and solving constraints.
 
-### Installation
-
-From project root:
-```bash
-cd backend
-pip install black antlr4-tools antlr4-python3-runtime ortools
-```
 
 ### Running the Server
 
@@ -96,14 +82,6 @@ This runs the development server at http://localhost:3000.
 ```bash
 npm run build
 ```
-
-
-## Usage
-
-1. **Start Backend**: Run server as above.
-2. **Start Frontend**: Run React app.
-3. **Interact**: Open the UI, input FOL formulas, view parse trees, and solver results.
-4. **API**: Send HTTP requests or use WebSocket to evaluate formulas programmatically.
 
 
 
